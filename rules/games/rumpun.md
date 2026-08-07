@@ -20,7 +20,10 @@ A blind-stacked trick-taking game. **Goal: collect the highest card-value total 
 
 - **Playable cards:** your face-up pile tops and your hand cards. Face-down cards are not playable.
 - After a trick resolves, any pile-top card that was played reveals the card beneath it (flip face up).
-- Follow suit if you can with a **playable** card. Buried face-down cards don't count — if you have no playable card of the led suit, you may play any card. That card **cannot win the trick**, but its value goes to the trick winner's score.
+- Follow suit if you can with a **playable** card. Buried face-down cards don't count.
+- If you have no playable card of the led suit, you may play any card:
+  - **Trump wins normally.** Playing trump when you can't follow suit takes the trick, exactly as in ordinary trick-taking (highest trump wins if several are played).
+  - **Any other off-suit card is a dump.** It **cannot win the trick**, but its value still goes to the trick winner's score.
 - **Trump breaking:** trump cannot be led until broken. Exception: no other playable option.
 - 13 tricks total; trick winner leads next.
 

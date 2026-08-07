@@ -23,6 +23,7 @@ A bid-exact trick-taking game. **Goal: win exactly as many tricks as you bid.** 
 ## Trump Determination
 
 - The **highest bidder's suit** becomes trump. Ties are broken by suit ranking ♣ < ♦ < ♥ < ♠ (for two-card bids, use the higher suit).
+- **Still tied after that** — same number *and* same suit, e.g. a single 8♠ against 3♠ + 5♠ — the **higher individual card wins** (8♠ beats 5♠).
 - If the highest bidder declared NT, the round is played **without trump**. A losing NT declaration fizzles — it counts only as its number.
 
 ## The Exactly-13 Rule

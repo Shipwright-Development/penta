@@ -19,6 +19,7 @@ A Fan Tan / Sevens variant. **Goal: discard as few points as possible.** Lower s
 ## Ace Convention
 
 - The **first ace placed** in a round decides, for **all suits** that round, whether aces go **under the 2** or **above the King**.
+- **The player placing that first ace chooses which end** — until an ace has been placed, both positions are legal, and picking one locks the convention for every suit for the rest of the round. It is a real decision, not a formality.
 - Terminal cards follow from this: aces above kings → terminals are 2 (bottom) and A (top); aces under 2s → terminals are A (bottom) and K (top).
 
 ## Line Collapse

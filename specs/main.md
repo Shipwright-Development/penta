@@ -55,7 +55,8 @@ Phase 1 is finished when all of the following hold. Anything not on this list is
 
 **Shipped where**
 
-- Web is the primary target and must work well. iOS and Android need to run via Expo Go; store builds are not part of phase 1.
+- **A web page, played on a PC or laptop.** That is the whole of phase 1's target — it must work well in a desktop browser. Mobile and native builds are phase 2; the Expo stack keeps them available without a rewrite, but nothing about them is in scope or tested here.
+- Interface is bilingual (English / Indonesian, switchable) with all copy behind an i18n layer. See [[penta-project/specs/phases/pass-and-play-ui|Pass & Play UI]].
 
 ## Design Principles
 

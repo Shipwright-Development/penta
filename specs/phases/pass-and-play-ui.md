@@ -2,6 +2,16 @@
 
 One shared device, 4 human players. The core UI problem: **hidden information on a shared screen**.
 
+## Platform & Presentation
+
+Decided 2026-08-07.
+
+- **Phase 1 ships as a web page, played on a PC or laptop.** That's the target to design and test against — a desktop browser window, four people around one screen, keyboard and mouse. Phones and tablets are phase 2 concerns; the app shouldn't break on them, but nothing is optimised for them yet.
+- The Expo / react-native-web stack still stands ([[penta-project/dev-link|dev-link]]): it builds the web target now and keeps iOS and Android available later without a rewrite. Phase 1 simply doesn't ship those.
+- **Cards are drawn in code** — SVG and CSS, no image assets. No licensing to track, scales to any size, and restyling later is a stylesheet change rather than an asset pipeline.
+- **Bilingual, switchable.** English and Indonesian, toggled in setup. All user-facing copy goes through an i18n layer from the first screen — retrofitting one after the UI exists means touching every component. Game and concept names (*batu*, *rumpun*, *capsa banting*) stay Indonesian in both languages; they're proper nouns.
+- Handoff and privacy still matter on a laptop: the reveal gesture and screen lock work the same when the machine is turned toward a player rather than handed over.
+
 ## Privacy Model
 
 - Every private view (a hand, a bid, discard pile review) sits behind a **handoff screen**: "Pass to <nickname>" → tap & hold / tap to reveal → play → screen locks before the next player.

@@ -10,6 +10,7 @@ Standard Hearts. **Goal: avoid penalty points.** Lower score is better.
   - **Round 2:** pass 3 cards to the **right**
   - **Round 3:** pass 3 cards **across**
   - **Round 4:** **no passing**
+- **Any three cards may be passed**, penalty cards included — the Q♠ and hearts are fair game.
 
 ## Play
 
