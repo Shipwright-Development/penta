@@ -24,9 +24,12 @@ A shedding game. **Goal: be first to empty your hand.** Fewest cards left is bet
 - **Lowest straight:** A-2-3-4-5 — A and 2 count low; judged by the **5**.
 - **Highest straight:** J-Q-K-A-2 — judged by the **2**.
 
+**Exception when suited:** the straight ordering above does *not* carry over to the bomb hierarchy. A **royal flush (10-J-Q-K-A suited) is the highest hand in the game**, above every straight flush — including a suited J-Q-K-A-2, even though that beats 10-J-Q-K-A as an ordinary straight. Straight flushes among themselves still rank by the straight ordering.
+
 ## Play
-- Play proceeds by beating the previous play with a **same-size** combination, or passing.
-- When all other players pass, the last player to play leads fresh with anything.
+- Play proceeds clockwise by beating the previous play with a **same-size** combination, or passing.
+- **Passing locks you out.** Once you pass, you take no further part until someone leads fresh — you cannot re-enter even if the play comes back around to you.
+- When all other players have passed, the last player to play leads fresh with anything, and everyone is back in.
 - **Bombs:** four-of-a-kind + kicker, straight flushes, and royal flushes may be played **on your turn at any point in the game, regardless of the current combination's size or type**. They act as stoppers and can only be beaten by a higher bomb. (There is no out-of-turn play.)
 
 ## Ending & Scoring

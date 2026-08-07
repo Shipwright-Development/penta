@@ -9,7 +9,7 @@ A Fan Tan / Sevens variant. **Goal: discard as few points as possible.** Lower s
 
 ## Play
 
-- The holder of the starting suit's 7 (e.g., 7♣ in round 1) goes first and **must play it**.
+- The holder of the starting suit's 7 (e.g., 7♣ in round 1) goes first and **must play it**. Play then proceeds **clockwise** from that player.
 - The other suits' 7s may be played at any time to open their lines.
 - On your turn, play a card adjacent to an existing card of the same suit (building up toward the King / down toward the 2 from each 7).
 - **You must play if you have a legal play.** If you have several, choose freely.

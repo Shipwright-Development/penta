@@ -13,9 +13,10 @@ A bid-exact trick-taking game. **Goal: win exactly as many tricks as you bid.** 
   - **2–10:** face value
   - **A:** 1
   - **J / Q / K:** 0 (bidding to win no tricks)
-- **Two-card bids** (minimum total of 7):
-  - Two number cards: bid = their sum.
+- **Two-card bids** (minimum total of 7). Both cards must be the same kind — you may not mix:
+  - Two number cards (A–10): bid = their sum.
   - Two face cards (J/Q/K): shout the desired bid (must be ≥ 7).
+  - **A number card paired with a face card is not a legal bid.**
   - Two cards of **different suits** = a **No-Trump (NT)** declaration.
 - Bids are revealed simultaneously. Bid cards return to hand immediately.
 
@@ -28,8 +29,9 @@ A bid-exact trick-taking game. **Goal: win exactly as many tricks as you bid.** 
 
 If all bids total exactly 13, the highest bidder **must** adjust every player's bid up or down by the same amount of their choosing (any amount). Scoring uses the adjusted bids and adjusted total.
 
+- The amount must be **non-zero**. Adjusting all four bids by *d* changes the total by 4*d*, so only *d* = 0 would leave the total at 13.
 - A 0-bidder raised to 1+ becomes a normal bidder (loses 0-bid special scoring).
-- A 0-bidder lowered below 0 automatically scores **−5**, plus **−2 per trick won**.
+- **Any bid pushed below 0** — whether it started at 0 or higher — automatically scores **−5**, plus **−2 per trick won**. A player adjusted from 5 down to −2 scores the same way a pushed 0-bidder does.
 
 ## Play
 

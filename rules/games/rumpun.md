@@ -13,6 +13,7 @@ A blind-stacked trick-taking game. **Goal: collect the highest card-value total 
 ## Trump & First Lead
 
 - **Trump** = the suit of the **highest face-up card** on the table among all players. Ties broken by ♣ < ♦ < ♥ < ♠.
+  - "Highest" means **card rank**, not the scoring values below: 2 < 3 < … < 10 < J < Q < K < A. An Ace beats a 10 here, even though a 10 is worth more points.
 - The holder of that highest face-up card **leads the first trick**.
 
 ## Play
