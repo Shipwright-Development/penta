@@ -21,11 +21,41 @@ Specs are organized by folder:
 - **`mechanics/`** — cross-cutting systems shared by all games
   - [[penta-project/specs/mechanics/game-flow|Game Flow]] — batu lifecycle: rounds, game order, dealing, dealer rotation
   - [[penta-project/specs/mechanics/scoring|Scoring]] — game scores, □/▼ markers, penta score tally
+  - [[penta-project/specs/mechanics/persistence|Persistence]] — save format, resume behaviour, version handling
 - **`modules/`** — the playable games themselves
   - [[penta-project/specs/modules/game-modules|Game Modules]] — the five games as pluggable modules on a shared engine
 - **`phases/`** — phase-specific deliverables
   - [[penta-project/specs/phases/pass-and-play-ui|Pass & Play UI]] — phase 1 interface: device passing, hidden information, privacy
   - [[penta-project/specs/phases/future-phases|Future Phases]] — online multiplayer, bots, accounts (stubs to expand later)
+
+## Phase 1 — Definition of Done
+
+Phase 1 is finished when all of the following hold. Anything not on this list is out of scope for phase 1, however tempting.
+
+**Playable**
+
+- Four nicknames in, a complete batu out: 5 games × 4 rounds, ending on a champion screen (or a shared victory).
+- Every rule in `penta-project/game-rule/` is enforced by the engine. No situation where the table has to house-rule something the app got wrong or refused to allow.
+- The score sheet and penta standings are reachable at any point from a public screen.
+
+**Correct**
+
+- One full batu played through the app produces the same numbers as the same batu scored by hand on paper. This is the acceptance test — if they disagree, phase 1 isn't done.
+- Property tests on the tie cases: placement splits, multi-□/▼ rounds, the all-four-tied round, moon shots. These are where the bugs live.
+- Per-module round-trip serialization tests ([[penta-project/specs/mechanics/persistence|Persistence]]).
+
+**Durable**
+
+- Force-quitting or refreshing at any point in the batu resumes with nothing lost, landing on the correct handoff screen.
+
+**Structurally sound for phase 2**
+
+- `packages/engine` has zero UI dependencies, enforced by the package's own dependency list rather than by discipline.
+- The UI computes no legality and no score — it renders `legalMoves` and displays what scoring reports.
+
+**Shipped where**
+
+- Web is the primary target and must work well. iOS and Android need to run via Expo Go; store builds are not part of phase 1.
 
 ## Design Principles
 

@@ -2,18 +2,80 @@
 
 Each of the five games is a **module** implementing a shared interface, driven by the flow engine ([[penta-project/specs/mechanics/game-flow|Game Flow]]). Rules are defined in `penta-project/game-rule/games/` — modules implement them, specs don't restate them.
 
-## Module Interface (conceptual)
+## Module Interface
 
-Every module must provide:
+This is the contract, not a sketch — all five modules implement it exactly, so the flow engine can drive any game without knowing which one it is. Agree it before writing modules; five implementations built against prose will drift apart.
 
-- `rankingDirection` — whether a higher or lower cumulative score places 1st ([[penta-project/specs/mechanics/scoring|Scoring]] reads this; it is never hardcoded in the tally)
-- `setup(hands, dealerContext)` — game-specific initialization (bids, passing, blind piles, …), and it returns who opens
-- `currentPlayer(state)` — whose turn it is. The pass & play handoff screen needs to *ask* this, not be told; the flow engine uses it to drive the turn loop
-- `legalMoves(player, state)` — the only source of move legality; UI renders exactly this
-- `applyMove(move)` — advances state
-- `isRoundOver(state)`
-- `roundResult(state)` → per-player round score + □/▼ recipients (per the Markers section of each rule file). Either marker list may be empty when all four players tie.
-- `serialize(state)` / `deserialize(data)` — phase 1 resumes an interrupted batu mid-round, so every module's state must round-trip losslessly, including hidden information (unrevealed Rumpun piles, Seven discard piles, unrevealed Trump bids). Enforce with a round-trip property test per module.
+### Shared types
+
+```ts
+type Suit = 'clubs' | 'diamonds' | 'hearts' | 'spades';
+type Rank = 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 'J' | 'Q' | 'K' | 'A';
+interface Card { suit: Suit; rank: Rank; }
+
+/** Seat index, clockwise. Fixed for the whole batu. */
+type PlayerId = 0 | 1 | 2 | 3;
+type GameId = 'trump' | 'seven' | 'hearts' | 'rumpun' | 'capsa';
+
+interface DealContext {
+  hands: Record<PlayerId, Card[]>;  // 13 each, already validated by the flow engine
+  dealer: PlayerId;
+  roundIndex: 0 | 1 | 2 | 3;        // Seven's starting suit and Hearts' pass direction key off this
+}
+
+interface RoundResult {
+  scores: Record<PlayerId, number>;
+  winners: PlayerId[];  // □ — may hold 1..3 entries, or 0 when all four tie
+  losers: PlayerId[];   // ▼ — same
+}
+```
+
+### The module
+
+```ts
+interface GameModule<S, M> {
+  readonly id: GameId;
+
+  /** Which direction places 1st. Scoring reads this; the tally never hardcodes it. */
+  readonly rankingDirection: 'high' | 'low';
+
+  setup(ctx: DealContext): S;
+
+  /**
+   * Who the engine is waiting on. Normally one player. Returns several during
+   * simultaneous phases — Trump bidding, Hearts passing — which pass & play
+   * then collects one at a time behind separate handoff screens.
+   * Empty once the round is over.
+   */
+  pendingPlayers(state: S): PlayerId[];
+
+  /** The only source of move legality. The UI renders exactly this and nothing else. */
+  legalMoves(state: S, player: PlayerId): M[];
+
+  /** Pure: returns new state, never mutates. Rejects a move not in legalMoves. */
+  applyMove(state: S, player: PlayerId, move: M): S;
+
+  isRoundOver(state: S): boolean;
+  roundResult(state: S): RoundResult;
+
+  /** Safe for the shared screen — table cards, trick in progress, revealed piles. */
+  publicView(state: S): unknown;
+
+  /** Only ever rendered behind a handoff screen, for that player alone. */
+  privateView(state: S, player: PlayerId): unknown;
+
+  serialize(state: S): unknown;   // JSON-safe
+  deserialize(data: unknown): S;
+}
+```
+
+### Why these shapes
+
+- **`pendingPlayers` rather than `currentPlayer`.** Trump's bidding and Hearts' passing are simultaneous in the physical game. A single-player accessor forces every module to fake a turn order that isn't in the rules, and the handoff screen needs the real answer.
+- **`publicView` / `privateView` are part of the contract, not the UI's business.** The UI cannot be trusted to work out what's secret — it would have to understand each game to do it. The module already knows. This is also exactly the split phase 2 needs when the server sends each device its own slice.
+- **`applyMove` is pure.** Undo is a single-step rollback ([[penta-project/specs/phases/pass-and-play-ui|Pass & Play UI]]) and save/resume snapshots state after every move; both are trivial with immutable state and painful without.
+- **`serialize` / `deserialize` must round-trip losslessly, hidden information included** — unrevealed Rumpun piles, Seven discard piles, un-revealed Trump bids. Property-test the round trip per module. See [[penta-project/specs/mechanics/persistence|Persistence]].
+- **`M` is per-module.** Trump's moves are bids and card plays; Capsa's are combinations and passes. No shared move union — the flow engine never inspects a move, it only passes it through.
 
 ## Shared Infrastructure
 

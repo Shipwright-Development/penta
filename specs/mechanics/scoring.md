@@ -32,11 +32,35 @@ Each game declares whether a higher or lower cumulative score places better. Thi
 
 ## UI Requirements
 
-- **Score sheet view**, always accessible: the 4×4-per-game grid with cumulative values and markers, matching how Ferdi writes it on paper (rows = rounds, columns = players, markers beside scores).
+- **Score sheet view**, always accessible: the 4×4-per-game grid with cumulative values and markers, matching how Ferdi writes it on paper (rows = rounds, columns = players, markers beside scores). Layout below.
 - **Penta standings view**: current penta scores + which games are tallied so far.
 - After each round: a brief result summary (round scores, who got □/▼, updated cumulative).
 - After each penta tally: placement breakdown showing the math (placement pts + marker adjustments), so disputes are settleable at a glance.
 - Batu end: champion screen; equal scores = shared victory.
+
+## Score Sheet Layout
+
+> [!warning] Needs confirming
+> Reconstructed from description — nobody building this has seen the paper sheet. **Add a photo of a real one to the vault and correct this**, then delete this callout. Two things in particular are guesses: whether each cell shows the round score or the running total, and whether penta scores sit under each game block or in one table at the end.
+
+One block per game, in play order. Rows are rounds, columns are players, markers sit beside the number:
+
+```
+                  Ferdi     Adi      Budi     Cita
+  TRUMP    R1       5 □     -2         3      -1 ▼
+           R2      13       -6 ▼       6       3
+           R3      11        1         9 ▼    10 □
+           R4      16 □       4        7      -2 ▼
+           ────────────────────────────────────────
+           total   16        4         7      -2
+           penta    5+2=7    3-2=1     2+0=2   0-1=-1
+
+  SEVEN    R1  ...
+```
+
+- Cells show the **running total** after that round, so the last row is the final game score — that's the number the penta tally ranks. The round's own score is available in the after-round summary rather than the sheet.
+- The `penta` row appears only once that game's round 4 is done, showing placement points and marker adjustment separately so the arithmetic is checkable.
+- Ranking direction differs per game, so the "best" column isn't always the largest number — highlight the leader rather than expecting the reader to remember which way this game runs.
 
 ## Invariants (test targets)
 
