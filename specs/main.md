@@ -22,6 +22,7 @@ Specs are organized by folder:
   - [[penta-project/specs/mechanics/game-flow|Game Flow]] — batu lifecycle: rounds, game order, dealing, dealer rotation
   - [[penta-project/specs/mechanics/scoring|Scoring]] — game scores, □/▼ markers, penta score tally
   - [[penta-project/specs/mechanics/persistence|Persistence]] — save format, resume behaviour, version handling
+  - [[penta-project/specs/mechanics/worked-examples|Worked Examples]] — hand-checked scoring fixtures; first unit tests
 - **`modules/`** — the playable games themselves
   - [[penta-project/specs/modules/game-modules|Game Modules]] — the five games as pluggable modules on a shared engine
 - **`phases/`** — phase-specific deliverables

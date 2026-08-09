@@ -1,71 +1,58 @@
 # CLAUDE.md — Penta Codebase
 
-Implementation of **Penta**, a compound card game for 4 players: 5 games played over 4 rounds. One full game is a *batu*.
+Implementation of **Penta**, a compound card game for 4 players: 5 games over 4 rounds. One full game is a *batu*.
 
-This repo is the **code**. The design work lives in an Obsidian vault outside it. That separation is deliberate — read the next section before changing any `.md` file here.
+This file is an index and a short list of things that are easy to get wrong. **It deliberately does not restate rules or specs** — a second copy of a fact is a copy that will eventually disagree with the first. Everything below points at where the answer actually lives.
 
-## Docs in This Repo Are Copies
+## Docs Here Are Read-Only Copies
 
-Two folders here are **read-only snapshots** handed off from the vault:
+- **`rules/`** — the authoritative ruleset, copied from the vault.
+- **`specs/`** — approved specs, copied from the vault.
+- **`scripts/`, and all code** — belong to this repo, edit freely.
 
-- **`rules/`** — the authoritative ruleset. `penta.md` (batu structure, dealing, scoring) plus one file per game in `rules/games/`.
-- **`specs/`** — approved specs. `main.md` is the index; `mechanics/`, `modules/`, and `phases/` hold the rest.
+**Never edit anything under `rules/` or `specs/`.** They are overwritten on the next handoff and your changes vanish. If implementation reveals a gap or contradiction: stop and raise it, don't invent a rule to unblock yourself. The fix is made in the vault, re-approved, and re-copied by `scripts/handoff.sh`.
 
-**Never edit files in `rules/` or `specs/`.** They are overwritten on the next handoff, and your changes vanish. If implementation reveals a gap, contradiction, or a better idea:
-
-1. Stop and raise it — don't invent a rule to unblock yourself.
-2. The fix is made in the vault, re-approved, and re-copied here.
-3. Then implement.
-
-Copies are byte-identical to the vault on purpose, so a diff reveals drift immediately. That's also why they still contain Obsidian wikilinks:
+Copies are byte-identical to the vault so `diff` reveals drift immediately. That's why they still contain Obsidian wikilinks:
 
 - `[[penta-project/specs/mechanics/scoring|Scoring]]` → `specs/mechanics/scoring.md`
 - `[[penta-project/game-rule/penta|penta.md]]` → `rules/penta.md`
-- A bare `[[trump|Trump]]` inside a rules file → `rules/games/trump.md`
-- Anything pointing at `dev-link` is a vault-only file — ignore it.
+- a bare `[[trump|Trump]]` inside a rules file → `rules/games/trump.md`
+- anything pointing at `dev-link` is vault-only — ignore it
 
-`rules/` wins over `specs/` wins over code comments, always.
+**`rules/` wins over `specs/` wins over code comments, always.**
 
-## Read Before Building
+## Where to Look
 
-`specs/main.md` is the index and holds the phase 1 definition of done. Then, by area: `specs/mechanics/game-flow.md` (batu lifecycle, dealing, dealer rotation, first player), `specs/mechanics/scoring.md` (two-tier scoring, ranking direction, ties), `specs/mechanics/persistence.md` (save format and resume), `specs/modules/game-modules.md` (the typed module interface every game implements), `specs/phases/pass-and-play-ui.md` (privacy model, platform, presentation).
+| Question | File |
+|---|---|
+| What counts as finished? | `specs/main.md` |
+| Batu lifecycle, dealing, dealer rotation, who leads | `specs/mechanics/game-flow.md` |
+| Scoring, ranking direction, ties, the score sheet | `specs/mechanics/scoring.md` |
+| Hand-checked scoring fixtures — write these tests first | `specs/mechanics/worked-examples.md` |
+| Save format, resume, versioning | `specs/mechanics/persistence.md` |
+| The module interface every game implements | `specs/modules/game-modules.md` |
+| Screens, privacy model, platform, presentation | `specs/phases/pass-and-play-ui.md` |
+| How any individual game actually plays | `rules/games/<game>.md` |
+
+**Before implementing any game module, read its entry under "Per-Game Implementation Notes" in `specs/modules/game-modules.md`.** That section lists the traps for each game — bid tiebreaks, trick-resolution cases, ace conventions, bomb and pass behaviour. They are there because each one was ambiguous enough to need an explicit ruling.
 
 ## Architecture
 
-npm workspaces monorepo:
+npm workspaces monorepo. Stack, tooling and versions: `specs/` plus the vault's `dev-link.md`.
 
-- **`packages/engine`** — pure TypeScript, **zero UI dependencies**. Card model, batu flow state machine, scoring, and the five games as modules behind one shared interface. The no-UI-deps rule is what makes the engine reusable for phase 2 online play; it's enforced by the package having nothing to import from.
-- **`apps/mobile`** — Expo (React Native + react-native-web). One codebase builds web, iOS, and Android. **Phase 1 builds and tests the web target only** — a page played on a PC or laptop. Native stays available so phase 2 needs no rewrite, but nothing about it is in scope now.
-- **State management:** Zustand.
-- **Tooling:** latest stable Expo SDK, TypeScript strict, Vitest for engine tests, ESLint + Prettier.
-- **Cards are drawn in code** (SVG/CSS), no image assets.
-- **Bilingual from the first screen** — English and Indonesian, switchable in setup. Every user-facing string goes through the i18n layer; do not hardcode English "for now". Game names (*batu*, *rumpun*, *capsa banting*) stay Indonesian in both.
+- **`packages/engine`** — pure TypeScript, **zero UI dependencies**. Card model, batu flow, scoring, and the five games as modules behind one interface. The no-UI-deps rule is what makes the engine reusable for phase 2; it's enforced by the package having nothing UI-related to import.
+- **`apps/mobile`** — Expo (React Native + react-native-web). **Phase 1 builds and tests the web target only** — a page played on a PC or laptop. Native stays available so phase 2 needs no rewrite; nothing about it is in scope now.
+- **State:** Zustand. **Tests:** Vitest for the engine. **TypeScript strict** throughout.
 
 ### Non-negotiables
 
-- **The UI never computes legality or score.** It renders exactly what `legalMoves` returns and displays what the scoring system reports. If the UI is deciding something, it's a bug.
+- **The UI never computes legality or score.** It renders what `legalMoves` returns and displays what scoring reports. If the UI is deciding something, it's a bug.
 - **Every state change flows through the engine.**
-- **Ranking direction is per-game.** Trump and Rumpun rank high, Seven/Hearts/Capsa rank low. Modules declare it; the tally never hardcodes it. Getting this wrong silently inverts a leaderboard.
-- **Module state must serialize losslessly**, including hidden information. Phase 1 resumes an interrupted batu mid-round.
-
-See `specs/modules/game-modules.md` for the module interface and `specs/mechanics/` for flow and scoring.
+- **Ranking direction is per-game** — modules declare it, the tally never hardcodes it. Getting this wrong silently inverts a leaderboard.
+- **Module state serializes losslessly**, hidden information included. Phase 1 resumes an interrupted batu mid-round.
+- **No hardcoded English.** The UI is bilingual from the first screen; every string goes through i18n.
+- **Cards are drawn in code** (SVG/CSS). No image assets.
 
 ## Scope
 
-- **Phase 1 (current):** pass & play on a single device — a web page on a PC or laptop. 4 humans, nicknames only, no accounts. Full batu with automated scoring and local save/resume. `specs/main.md` holds the definition of done; treat it as the finish line.
-- **Phase 2:** online multiplayer, reusing this engine unchanged.
-- **Later:** AI bots, accounts.
-
-Don't build for phase 2 yet — but don't put UI concerns in the engine either, because phase 2 is exactly why that line exists.
-
-## Ties and Edge Cases
-
-The bug-prone parts, all specified — check the spec before guessing:
-
-- Placement ties split evenly and need not total 10 after rounding (`specs/mechanics/scoring.md`).
-- An all-four-tied round awards no markers; dealer rotation then picks at random.
-- **Rumpun trick resolution has three cases:** follow suit normally; trump played when unable to follow **wins**; any other off-suit card is a dump that can't win but still scores to the trick winner. Rumpun also has two orderings that must not be conflated — card *rank* decides trumps and tricks, card *value* only feeds scoring.
-- **Trump's highest-bidder resolution is three-tiered:** bid value, then suit ranking, then highest individual card. Skip the third and a same-suit tie deadlocks the round.
-- Trump's exactly-13 rule adjusts every bid by the same non-zero amount, chosen by the highest bidder. Any bid pushed below 0 scores −5 plus −2 per trick, whatever it started at.
-- Seven's ace value has **three** cases: 1, 14, or 7 when no ace was placed all round. The convention is a **player choice** — offer an ace at both ends until one is placed.
-- Capsa bombs are playable only on your own turn, but against any combination. **Passing locks a player out** of the current trick, and the **royal flush outranks every straight flush** despite the ordinary straight ordering.
+Phase 1 is pass & play on one device, web only. Phase 2 is online multiplayer reusing this engine unchanged. Bots and accounts come later. Don't build for phase 2 — but don't put UI concerns in the engine either, because phase 2 is exactly why that line exists. Details in `specs/main.md`.

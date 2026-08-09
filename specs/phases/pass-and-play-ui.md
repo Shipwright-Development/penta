@@ -18,6 +18,38 @@ Decided 2026-08-07.
 - Nothing private is ever rendered until the reveal gesture.
 - Public state (table cards, score sheet, trick in progress) is always visible between turns.
 
+## Screen Inventory
+
+The full set for phase 1. Anything not listed is out of scope; anything an implementation needs that isn't here is a gap to raise, not to invent.
+
+**Public** — shown on the shared screen, safe for everyone to see:
+
+| Screen | Purpose |
+|---|---|
+| Title | New batu, or resume a saved one |
+| Setup | 4 nicknames, seat order, language, undo on/off |
+| Dealing ritual | Shuffle, middle-card flip, who receives the first card |
+| Table | Public game state: cards on the table, trick in progress, whose turn it is |
+| Handoff | "Pass to <nickname>" + reveal gesture — the gate in front of every private view |
+| Round summary | Round scores, who took □/▼, updated cumulative |
+| Penta tally | Placement breakdown after a game's 4th round, showing the arithmetic |
+| Score sheet | The full grid ([[penta-project/specs/mechanics/scoring|Scoring]]), reachable from any public screen |
+| Penta standings | Current penta scores and which games are tallied |
+| Champion | Batu end, including shared victory |
+| Pause / settings | Language, undo toggle, abandon batu |
+
+**Private** — only ever rendered after the reveal gesture, for one named player:
+
+| Screen | Used by |
+|---|---|
+| Hand + legal moves | All five games; the per-game table area differs, the hand strip doesn't |
+| Bid entry | Trump |
+| Exactly-13 adjustment | Trump, highest bidder only |
+| Pass selection (pick 3) | Hearts, rounds 1–3 |
+| Own discard review | Seven, on that player's turn only |
+
+Trump's bid reveal and the exactly-13 adjustment are the two moments where a private screen hands back to a *public* one mid-phase — bids are entered privately, then revealed together on the table screen.
+
 ## Turn Loop
 
 1. Handoff screen names the next player.
