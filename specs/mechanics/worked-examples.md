@@ -25,7 +25,7 @@ Adjusted total is 17, i.e. **over 13**, so misses cost −1 per trick over and �
 
 ## 2. Trump — exactly-13, adjusted down past zero
 
-Bids: Ferdi 7, Adi `K♥` (= 0), Budi 3, Cita 3. Total **13** again. Ferdi is highest, and picks **−2**.
+Bids: Ferdi `7♦`, Adi `K♥` (= 0), Budi `3♠`, Cita `3♣`. Total **13** again. Ferdi is highest, so **trump is ♦**, and he picks **−2**.
 
 | | Ferdi | Adi | Budi | Cita |
 |---|---|---|---|---|
@@ -82,6 +82,18 @@ Ranking low: Ferdi and Budi tie for 1st on 40, Adi is 3rd, Cita 4th.
 Three players tie for 1st, taking the 1st, 2nd and 3rd placement points: (5 + 3 + 2) / 3 = 3.333… → **3.33 displayed**. Cita is 4th → 0.
 
 Displayed points total 9.99, not 10. That is correct and expected — the invariant in [[penta-project/specs/mechanics/scoring|Scoring]] holds on the exact internal value, never on the rounded display.
+
+Markers are omitted here to isolate the rounding; a real tally adds them on top, as in example 4.
+
+## Cross-checks these examples encode
+
+Useful as assertions in their own right:
+
+- Tricks won across the four players always sum to **13** (examples 1 and 2).
+- An adjustment of *d* moves the bid total by **4*d*** — 13 → 17 at *d* = +1, 13 → 5 at *d* = −2.
+- Over-13 and under-13 totals swap which miss costs −1 and which costs −2. Examples 1 and 2 exercise one each; an implementation that hardcodes one direction passes one and fails the other.
+- Placement points sum to exactly **10** internally in every tally, ties included (examples 4 and 5).
+- Markers awarded across a game's four rounds are at least 4 □ and 4 ▼ unless a round was all-four-tied. Example 4's markers total 4 □ and 4 ▼ — deliberately, so the fixture is internally consistent.
 
 ## 6. Golden batu — to be recorded
 

@@ -42,14 +42,16 @@ Dealing decides who holds which cards; it does **not** decide who leads. Each ga
 | Rumpun | holder of the highest face-up card |
 | Capsa Banting | holder of the 3♦ |
 
-The rule files are authoritative for how each is resolved, including tie-breaks. The flow engine passes the dealt hands to the module and receives back who acts first.
+The rule files are authoritative for how each is resolved, including tie-breaks. Mechanically the flow engine calls `setup(ctx)` with the dealt hands and then asks `pendingPlayers(state)` — the module's answer *is* the opener. There is no separate "who goes first" return value to keep in sync.
 
 ## Engine Responsibilities (vs Game Modules)
 
 The flow engine owns: player/seat state, round & game sequencing, dealing, dealer rotation, invoking the active game module, collecting its round results, and forwarding them to scoring. It knows nothing about tricks, bids, combinations, or who leads — that's module territory.
 
+**Undo lives here too, not in the modules.** Because `applyMove` is pure, the flow engine simply keeps the previous state and swaps back to it — modules need no `undo` method and no history of their own. One step only, discarded at every round boundary and never persisted ([[penta-project/specs/mechanics/persistence|Persistence]]). Undo is still an engine operation: the UI requests it, the engine performs it, exactly like any other state change.
+
 ## Edge Cases
 
 - A game module reports its round result as: per-player round score + □/▼ recipients (possibly none of either — see Dealer Rotation). The flow engine treats this as opaque and passes it to [[penta-project/specs/mechanics/scoring|Scoring]].
 - **Save/resume:** the full batu state is persisted locally after every confirmed move, so closing the app mid-round loses nothing. Restoring returns to the handoff screen for whoever was next, never straight into a private view. Requires module serialization — see [[penta-project/specs/modules/game-modules|Game Modules]].
-- Abandon/quit mid-batu: beyond resume, out of scope for phase 1.
+- **Abandoning a batu** is allowed from the pause screen and simply discards the save behind a confirmation ([[penta-project/specs/mechanics/persistence|Persistence]]). What's out of scope for phase 1 is anything *more* than that — no partial credit, no recording an unfinished batu, no substituting a player mid-game.

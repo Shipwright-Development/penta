@@ -36,7 +36,7 @@ The full set for phase 1. Anything not listed is out of scope; anything an imple
 | Score sheet | The full grid ([[penta-project/specs/mechanics/scoring|Scoring]]), reachable from any public screen |
 | Penta standings | Current penta scores and which games are tallied |
 | Champion | Batu end, including shared victory |
-| Pause / settings | Language, undo toggle, abandon batu |
+| Pause / settings | Language (changeable any time), and starting a new batu — which discards the current save behind a confirmation |
 
 **Private** — only ever rendered after the reveal gesture, for one named player:
 
@@ -78,7 +78,7 @@ Trump's bid reveal and the exactly-13 adjustment are the two moments where a pri
 Decided 2026-08-07. Undo exists because a shared device invites misclicks — it is a misclick fix, not a take-back.
 
 - **Available in pass & play and against bots. Never in online multiplayer** (phase 2), where a rollback would have to be agreed by four separate devices.
-- **Toggleable in setup**, on by default. A table that wants strict play turns it off for the batu.
+- **Set in setup, on by default, then locked for the whole batu.** A table that wants strict play turns it off before dealing. It is deliberately not changeable mid-batu — otherwise a player who has just misplayed can switch it back on, which is exactly the argument the setting exists to prevent.
 - **Scope:** rolls back the last confirmed move, one step. Not a full history rewind.
 - **Information caveat:** undo cannot un-see. If the move revealed something — a Rumpun pile flip, a trick resolving, a Trump bid reveal — the other players have already seen it and the engine can't take that back. Warn on undo past a reveal rather than silently allowing it.
 - Cheapest version first: a confirm step on every move, so most misclicks never become moves at all.
