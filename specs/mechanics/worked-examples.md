@@ -41,8 +41,16 @@ Adjusted total is 5, i.e. **under 13**, so misses cost −1 per trick under and 
 - Budi and Cita are each 2 over → −4 each.
 - Markers: □ Ferdi, ▼ Adi.
 
-> [!question] Open — needs a ruling
-> A bid adjusted to **exactly 0** (say a bid of 2 adjusted by −2) isn't covered. The rules say a 0-bidder raised to 1+ loses the special scoring, which implies the special scoring belongs to the *original* bid — so an adjusted-to-0 player would score as a normal bidder aiming at 0 tricks, not as a 0-bidder. Confirm before implementing; both examples above avoid the case deliberately.
+### 2b. A bid adjusted to exactly 0
+
+Ruled 2026-08-07: **0-bid scoring belongs to the bid as originally made.** Take the example above and give Budi an original bid of 2 instead of 3 (with Cita on 4, keeping the total at 13). After the −2 adjustment Budi sits on exactly 0:
+
+| Budi's tricks | Score | Why |
+|---|---|---|
+| 0 | **0** | Hit the adjusted bid exactly → score = bid = 0. **Not +5** — he never bid 0, the adjustment put him there. |
+| 2 | **−4** | Adjusted total is under 13, so −2 per trick over. |
+
+The three cases the implementation must keep apart: a **genuine** 0-bid (+5 / −5 then −2 each), a bid **adjusted to** 0 (ordinary scoring against a target of 0), and a bid **adjusted below** 0 (−5 then −2 per trick, as Adi above).
 
 ## 3. Hearts — shooting the moon
 

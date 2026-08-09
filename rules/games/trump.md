@@ -32,6 +32,7 @@ If all bids total exactly 13, the highest bidder **must** adjust every player's 
 
 - The amount must be **non-zero**. Adjusting all four bids by *d* changes the total by 4*d*, so only *d* = 0 would leave the total at 13.
 - A 0-bidder raised to 1+ becomes a normal bidder (loses 0-bid special scoring).
+- **0-bid scoring belongs to the bid as originally made, not to the adjusted number.** A bid adjusted *to* exactly 0 scores as a normal bidder aiming at 0 tricks: take none and score 0 (not +5); take some and pay the ordinary per-trick penalty.
 - **Any bid pushed below 0** — whether it started at 0 or higher — automatically scores **−5**, plus **−2 per trick won**. A player adjusted from 5 down to −2 scores the same way a pushed 0-bidder does.
 
 ## Play
