@@ -46,21 +46,26 @@ Each game declares whether a higher or lower cumulative score places better. Thi
 One block per game, in play order. Rows are rounds, columns are players, markers sit beside the number:
 
 ```
-                  Ferdi     Adi      Budi     Cita
-  TRUMP    R1       5 □     -2         3      -1 ▼
-           R2      13       -6 ▼       6       3
-           R3      11        1         9 ▼    10 □
-           R4      16 □       4        7      -2 ▼
-           ────────────────────────────────────────
-           total   16        4         7      -2
-           penta    5+2=7    3-2=1     2+0=2   0-1=-1
+                    Ferdi       Adi        Budi       Cita
+  TRUMP    R1          5 □       -2 ▼         3         -1
+           R2         13 □       -6 ▼         6          3
+           R3         11 ▼        1 □         9         10 □
+           R4         16 □        4          7          -2 ▼
+           ──────────────────────────────────────────────────
+           total      16          4          7          -2
+           place     1st (5)    3rd (2)    2nd (3)    4th (0)
+           markers    3□ 1▼      1□ 2▼       —         1□ 1▼
+           penta     5+2 = 7    2-1 = 1    3+0 = 3    0+0 = 0
 
   SEVEN    R1  ...
 ```
 
-- Cells show the **running total** after that round, so the last row is the final game score — that's the number the penta tally ranks. The round's own score is available in the after-round summary rather than the sheet.
-- The `penta` row appears only once that game's round 4 is done, showing placement points and marker adjustment separately so the arithmetic is checkable.
+Worked from these round scores — R1 `5 / -2 / 3 / -1`, R2 `8 / -4 / 3 / 4`, R3 `-2 / 7 / 3 / 7`, R4 `5 / 3 / -2 / -12`. R3 shows a tied □ going to two players. Trump ranks high, so Budi's 7 places 2nd ahead of Adi's 4.
+
+- Cells show the **running total** after that round, so the last row is the final game score — that's the number the penta tally ranks.
+- The `place`, `markers`, and `penta` rows appear only once that game's round 4 is done, keeping placement points and marker adjustment separate so the arithmetic is checkable at a glance.
 - Ranking direction differs per game, so the "best" column isn't always the largest number — highlight the leader rather than expecting the reader to remember which way this game runs.
+- **Markers are awarded on the round score, but the cells show running totals**, so the sheet alone doesn't let you check why a □ landed where it did. Either show the round score on hover/tap or accept that marker auditing lives in the after-round summary. Worth deciding when the real sheet is confirmed.
 
 ## Invariants (test targets)
 
