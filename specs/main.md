@@ -67,7 +67,10 @@ Phase 1 is finished when all of the following hold. Anything not on this list is
 
 ## Open Questions
 
-- *(none currently)*
+No rules or design questions remain. Two gaps are **missing artefacts rather than undecided questions**, both needing something only the table can supply:
+
+- **A recorded batu.** The definition of done below requires the app's numbers to match a hand-scored batu; none is recorded. Transcribe one into [[penta-project/specs/mechanics/worked-examples|Worked Examples]] §6.
+- **A photo of the paper score sheet**, to replace the reconstructed layout in [[penta-project/specs/mechanics/scoring|Scoring]].
 
 ## Decided
 

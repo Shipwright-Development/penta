@@ -92,4 +92,4 @@ interface GameModule<S, M> {
 
 ## Open Questions
 
-- *(none currently — bomb timing and shouted-bid input resolved 2026-07-11; ranking direction, turn accessor, and Seven's no-ace case resolved 2026-08-07)*
+*(none — bomb timing and shouted-bid input resolved 2026-07-11; ranking direction, turn accessor, Seven's no-ace case, Rumpun trick resolution, the Trump bid tiebreak, and all three zero-adjacent bid cases resolved 2026-08-07)*
