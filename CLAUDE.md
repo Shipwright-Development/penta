@@ -25,7 +25,7 @@ Copies are byte-identical to the vault so `diff` reveals drift immediately. That
 
 | Question | File |
 |---|---|
-| What counts as finished? | `specs/main.md` |
+| What counts as finished, and what to build first | `specs/main.md` |
 | Batu lifecycle, dealing, dealer rotation, who leads | `specs/mechanics/game-flow.md` |
 | Scoring, ranking direction, ties, the score sheet | `specs/mechanics/scoring.md` |
 | Hand-checked scoring fixtures — write these tests first | `specs/mechanics/worked-examples.md` |

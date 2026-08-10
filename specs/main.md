@@ -59,6 +59,27 @@ Phase 1 is finished when all of the following hold. Anything not on this list is
 - **A web page, played on a PC or laptop.** That is the whole of phase 1's target — it must work well in a desktop browser. Mobile and native builds are phase 2; the Expo stack keeps them available without a rewrite, but nothing about them is in scope or tested here.
 - Interface is bilingual (English / Indonesian, switchable) with all copy behind an i18n layer. See [[penta-project/specs/phases/pass-and-play-ui|Pass & Play UI]].
 
+## Build Order
+
+Guidance, not contract — the definition of done above is the contract. But the sequence matters: three of the five games share a trick-taking core, and the module interface should be proven before four modules are written against it.
+
+Two principles drive the order. **Test the highest-bug-density code before any game exists** — scoring and its tie handling need no game logic at all and have hand-checked fixtures waiting. And **prove the whole stack vertically before going wide** — one game playable on screen beats five games playable only in tests.
+
+| # | Stage | Done when |
+|---|---|---|
+| 1 | **Foundations.** Scaffold the monorepo, tooling, scripts. **Pin the Expo SDK version** in `package.json` and record it in `dev-link.md`. Shared types and card model per [[penta-project/specs/modules/game-modules|Game Modules]]: cards, seats, deck, shuffle, per-game rank and suit orderings. | The web target boots, tests and lint run, and Capsa's inverted suit order and Rumpun's rank-vs-value split are both expressed in types. |
+| 2 | **Scoring.** The whole two-tier system: round recording, cumulative game scores, markers, placement, ties, penta tally. Needs **no game logic whatsoever**. | Worked examples 4 and 5 pass, plus property tests on the tie shapes. This is where the bugs live — get it right while it's isolated. |
+| 3 | **Flow engine + persistence**, driven by a stub module returning canned results. Batu sequencing, dealing, the middle-card rule, dealer rotation including the no-▼ fallback, undo, save/resume. | A fake 20-round batu runs end to end, and saving/reloading after every move produces identical final scores. |
+| 4 | **Trick-taking core + Trump.** The first real module, and the hardest: simultaneous bidding, exactly-13, three-tier tiebreak, three zero-adjacent cases. | Worked examples 1, 2 and 2b pass; a Trump round plays out headless. |
+| 5 | **UI vertical slice.** Handoff screen, hand view, table, bid entry, round summary — enough to play one Trump round on screen, i18n wired from the first string. | Four people can play a round of Trump on a laptop without seeing each other's hands. This is the first moment the design is real rather than described. |
+| 6 | **Capsa Banting.** Deliberately next, not last: it is the most structurally different game — shedding, not tricks; combinations; pass lock-out; bombs. If the module interface doesn't generalise, this is what reveals it. | Capsa plays through the same UI shell with only module-level additions. If the interface needed changing, better to learn it now with two modules written than with four. |
+| 7 | **Hearts**, then **Rumpun.** Both reuse the trick core; Hearts adds passing and moon detection, Rumpun adds pile reveals and the three-case trick resolution. | Worked example 3 passes; Rumpun never confuses card rank with card value. |
+| 8 | **Seven.** Last of the five — a line/adjacency model sharing least with the others, plus the ace convention as a genuine player choice. | Both ace placements appear in `legalMoves` until one is played. |
+| 9 | **Full UI.** Remaining screens per [[penta-project/specs/phases/pass-and-play-ui|Pass & Play UI]], score sheet, penta tally breakdown, champion, resume UX, complete i18n pass in both languages. | Every screen in the inventory exists and nothing renders a hardcoded string. |
+| 10 | **Acceptance.** A full batu played through the app against the recorded paper batu. | Numbers match. See the definition of done above. |
+
+Raise, don't invent, if a stage reveals a rules gap — the correction is made in the vault and re-copied.
+
 ## Design Principles
 
 - **Rules live in the vault, once.** The engine implements `penta-project/game-rule/`; any rules gap gets fixed there first (see [[penta-project/dev-link|dev-link]]).
