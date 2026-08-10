@@ -1,4 +1,4 @@
-import type { Rank, Suit } from '../types/card.js';
+import type { Rank, Suit } from '../types/card';
 
 // ---------------------------------------------------------------------------
 // Suit rankings (value = sort position; lower = weaker)
@@ -33,8 +33,19 @@ export const CAPSA_SUIT_RANK: Record<Suit, number> = {
  * trick-winner resolution — not for Rumpun scoring, which uses RUMPUN_CARD_VALUE).
  */
 export const STANDARD_CARD_RANK: Record<Rank, number> = {
-  2: 0, 3: 1, 4: 2, 5: 3, 6: 4, 7: 5, 8: 6, 9: 7, 10: 8,
-  J: 9, Q: 10, K: 11, A: 12,
+  2: 0,
+  3: 1,
+  4: 2,
+  5: 3,
+  6: 4,
+  7: 5,
+  8: 6,
+  9: 7,
+  10: 8,
+  J: 9,
+  Q: 10,
+  K: 11,
+  A: 12,
 };
 
 /**
@@ -42,8 +53,19 @@ export const STANDARD_CARD_RANK: Record<Rank, number> = {
  * The 2 is the highest card, unlike in the standard ordering.
  */
 export const CAPSA_CARD_RANK: Record<Rank, number> = {
-  3: 0, 4: 1, 5: 2, 6: 3, 7: 4, 8: 5, 9: 6, 10: 7,
-  J: 8, Q: 9, K: 10, A: 11, 2: 12,
+  3: 0,
+  4: 1,
+  5: 2,
+  6: 3,
+  7: 4,
+  8: 5,
+  9: 6,
+  10: 7,
+  J: 8,
+  Q: 9,
+  K: 10,
+  A: 11,
+  2: 12,
 };
 
 // ---------------------------------------------------------------------------
@@ -60,10 +82,19 @@ export const CAPSA_CARD_RANK: Record<Rank, number> = {
  * Full deck total: 9 points per rank × 4 suits = 36.
  */
 export const RUMPUN_CARD_VALUE: Record<Rank, number> = {
-  2: 1, 3: 1, 4: 1, 5: 1,
-  6: -1, 7: -2, 8: -3, 9: -4,
+  2: 1,
+  3: 1,
+  4: 1,
+  5: 1,
+  6: -1,
+  7: -2,
+  8: -3,
+  9: -4,
   10: 5,
-  J: 1, Q: 2, K: 3, A: 4,
+  J: 1,
+  Q: 2,
+  K: 3,
+  A: 4,
 };
 
 // ---------------------------------------------------------------------------
@@ -75,8 +106,18 @@ export const RUMPUN_CARD_VALUE: Record<Rank, number> = {
  * Ace value depends on game state — see SEVEN_ACE_VALUE.
  */
 export const SEVEN_DISCARD_VALUE: Omit<Record<Rank, number>, 'A'> = {
-  2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10,
-  J: 11, Q: 12, K: 13,
+  2: 2,
+  3: 3,
+  4: 4,
+  5: 5,
+  6: 6,
+  7: 7,
+  8: 8,
+  9: 9,
+  10: 10,
+  J: 11,
+  Q: 12,
+  K: 13,
 };
 
 /** Ace placement convention for a Seven round. */

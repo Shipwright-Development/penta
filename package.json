@@ -10,7 +10,9 @@
     "test:engine": "npm -w @penta/engine test",
     "test:watch": "npm -w @penta/engine run test:watch",
     "lint": "eslint .",
-    "typecheck": "tsc --build packages/engine",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc -p packages/engine",
     "web": "npm --workspace=apps/mobile run web",
     "start": "npm --workspace=apps/mobile run start"
   },

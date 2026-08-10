@@ -3,3 +3,13 @@ dist/
 build/
 .expo/
 web-build/
+
+# Read-only byte-identical copies from the vault — never reformat,
+# it would break `handoff.sh --check`.
+rules/
+specs/
+
+# Prose docs stay under human control, not the code formatter.
+*.md
+
+package-lock.json

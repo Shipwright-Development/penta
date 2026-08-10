@@ -1,4 +1,4 @@
-import type { Card, PlayerId, GameId } from './card.js';
+import type { Card, PlayerId, GameId } from './card';
 
 export interface DealContext {
   hands: Record<PlayerId, Card[]>;
@@ -10,7 +10,7 @@ export interface DealContext {
 export interface RoundResult {
   scores: Record<PlayerId, number>;
   winners: PlayerId[]; // □ recipients — 0 entries when all four tie
-  losers: PlayerId[];  // ▼ recipients — 0 entries when all four tie
+  losers: PlayerId[]; // ▼ recipients — 0 entries when all four tie
 }
 
 export interface GameModule<S, M> {
@@ -43,6 +43,6 @@ export interface GameModule<S, M> {
   /** Only ever rendered behind a handoff screen, for that player alone. */
   privateView(state: S, player: PlayerId): unknown;
 
-  serialize(state: S): unknown;   // must be JSON-safe
+  serialize(state: S): unknown; // must be JSON-safe
   deserialize(data: unknown): S;
 }

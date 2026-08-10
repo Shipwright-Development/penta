@@ -6,7 +6,7 @@ import {
   CAPSA_CARD_RANK,
   RUMPUN_CARD_VALUE,
   SEVEN_ACE_VALUE,
-} from './ordering.js';
+} from './ordering';
 
 describe('suit orderings', () => {
   it('standard: clubs < diamonds < hearts < spades', () => {
