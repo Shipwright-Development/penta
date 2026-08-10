@@ -88,3 +88,9 @@ export type {
 
 export { createCapsaModule, classify, beats, allCombos } from './games/capsa';
 export type { CapsaState, CapsaMove, Combo, ComboType } from './games/capsa';
+
+export { createHeartsModule } from './games/hearts';
+export type { HeartsState, HeartsMove, HeartsPhase } from './games/hearts';
+
+export { createRumpunModule } from './games/rumpun';
+export type { RumpunState, RumpunMove, Pile } from './games/rumpun';

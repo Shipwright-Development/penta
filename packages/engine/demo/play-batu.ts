@@ -18,6 +18,8 @@ import { createTrumpModule, trumpDealValid } from '../src/games/trump/trump';
 import type { TrumpState, TrumpMove } from '../src/games/trump/trump';
 import { bidValue, bidSuit } from '../src/games/trump/bid';
 import { createCapsaModule } from '../src/games/capsa/capsa';
+import { createHeartsModule } from '../src/games/hearts/hearts';
+import { createRumpunModule } from '../src/games/rumpun/rumpun';
 
 const NAMES = ['Ferdi', 'Adi', 'Budi', 'Cita'] as const;
 const name = (p: PlayerId) => NAMES[p];
@@ -66,13 +68,13 @@ function demoTrumpRound() {
 // ---------------------------------------------------------------------------
 
 function demoFullBatu() {
-  console.log('\n\n=== A FULL BATU (Trump + Capsa real, others stubbed) ===\n');
+  console.log('\n\n=== A FULL BATU (only Seven stubbed) ===\n');
   const engine = createEngine({
     modules: {
       trump: createTrumpModule(),
       seven: makeStubModule('seven'),
-      hearts: makeStubModule('hearts'),
-      rumpun: makeStubModule('rumpun'),
+      hearts: createHeartsModule(),
+      rumpun: createRumpunModule(),
       capsa: createCapsaModule(),
     },
     rng: makeRng(2026),
