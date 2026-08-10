@@ -1,6 +1,13 @@
-import type { PlayerId, GameId } from '../types/card';
+import type { Card, PlayerId, GameId } from '../types/card';
 import type { GameModule, RoundResult } from '../types/game';
 import type { PentaBreakdown } from '../scoring/types';
+
+/** The middle-card flip that decided the first-card recipient, for the ritual. */
+export interface DealRitual {
+  dealer: PlayerId;
+  middleCard: Card;
+  firstRecipient: PlayerId;
+}
 
 /** The five games, in the fixed order every round plays them. */
 export const GAME_ORDER: readonly GameId[] = ['trump', 'seven', 'hearts', 'rumpun', 'capsa'];
@@ -44,6 +51,8 @@ export interface BatuState {
   pentaTallies: Partial<Record<GameId, PentaBreakdown>>;
   /** ▼ recipients of the game just finished — the dealer-rotation pool. */
   lastLosers: PlayerId[];
+  /** The most recent dealing ritual, for the dealing screen. */
+  lastDeal: DealRitual | null;
   active: ActiveGame | null;
   phase: Phase;
   /**

@@ -12,7 +12,7 @@ import { GAME_ORDER } from './state';
 import type { BatuState, BatuSettings, ModuleRegistry, Phase } from './state';
 
 /** Bump on any breaking change to BatuState or a module's serialized shape. */
-export const BATU_SCHEMA_VERSION = 1;
+export const BATU_SCHEMA_VERSION = 2;
 
 export interface EngineOptions {
   modules: ModuleRegistry;
@@ -31,6 +31,7 @@ export interface SerializedBatu {
   sheet: Record<GameId, RoundResult[]>;
   pentaTallies: BatuState['pentaTallies'];
   lastLosers: PlayerId[];
+  lastDeal: BatuState['lastDeal'];
   phase: Phase;
   active: { gameId: GameId; state: unknown } | null;
 }
@@ -68,6 +69,7 @@ export function createEngine(options: EngineOptions): Engine {
     sheet: emptySheet(),
     pentaTallies: {},
     lastLosers: [],
+    lastDeal: null,
     active: null,
     phase: 'awaiting-deal',
     undoSnapshot: null,
@@ -79,13 +81,22 @@ export function createEngine(options: EngineOptions): Engine {
     }
     const gameId = GAME_ORDER[state.gameIndex];
     const mod = modules[gameId];
-    const { hands } = dealForGame(state.dealer, rng, dealValidators[gameId]);
-    const ctx: DealContext = { hands, dealer: state.dealer, roundIndex: state.roundIndex };
+    const deal = dealForGame(state.dealer, rng, dealValidators[gameId]);
+    const ctx: DealContext = {
+      hands: deal.hands,
+      dealer: state.dealer,
+      roundIndex: state.roundIndex,
+    };
     return {
       ...state,
       active: { gameId, state: mod.setup(ctx) },
       phase: 'playing',
       undoSnapshot: null,
+      lastDeal: {
+        dealer: state.dealer,
+        middleCard: deal.middleCard,
+        firstRecipient: deal.firstRecipient,
+      },
     };
   };
 
@@ -169,6 +180,7 @@ export function createEngine(options: EngineOptions): Engine {
     sheet: state.sheet,
     pentaTallies: state.pentaTallies,
     lastLosers: state.lastLosers,
+    lastDeal: state.lastDeal,
     phase: state.phase,
     active: state.active
       ? {
@@ -192,6 +204,7 @@ export function createEngine(options: EngineOptions): Engine {
       sheet: d.sheet,
       pentaTallies: d.pentaTallies,
       lastLosers: d.lastLosers,
+      lastDeal: d.lastDeal,
       phase: d.phase,
       active: d.active
         ? { gameId: d.active.gameId, state: modules[d.active.gameId].deserialize(d.active.state) }

@@ -48,6 +48,7 @@ export type {
   Engine,
   EngineOptions,
   SerializedBatu,
+  DealRitual,
 } from './flow';
 
 export {

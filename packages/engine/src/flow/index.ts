@@ -6,6 +6,7 @@ export type {
   Phase,
   ModuleRegistry,
   AnyGameModule,
+  DealRitual,
 } from './state';
 export { nextDealer } from './rotation';
 export { createEngine, BATU_SCHEMA_VERSION } from './engine';

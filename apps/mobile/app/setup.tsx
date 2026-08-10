@@ -5,12 +5,12 @@ import { useT } from '../src/i18n';
 import { theme } from '../src/theme';
 import { Button } from '../src/components/Button';
 import { LangToggle } from '../src/components/LangToggle';
-import { useRound } from '../src/store';
+import { useBatu } from '../src/batuStore';
 
 export default function SetupScreen() {
   const t = useT();
   const router = useRouter();
-  const start = useRound((s) => s.start);
+  const newBatu = useBatu((s) => s.newBatu);
 
   const [names, setNames] = useState(['', '', '', '']);
   const [undoEnabled, setUndoEnabled] = useState(true);
@@ -20,7 +20,7 @@ export default function SetupScreen() {
 
   const onStart = () => {
     if (!ready) return;
-    start(trimmed, { undoEnabled });
+    newBatu(trimmed, { undoEnabled });
     router.push('/play');
   };
 

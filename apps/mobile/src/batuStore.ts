@@ -1,0 +1,209 @@
+import { create } from 'zustand';
+import {
+  trickWinner,
+  type BatuState,
+  type BatuSettings,
+  type PlayerId,
+  type GameId,
+  type Card,
+  type RoundResult,
+} from '@penta/engine';
+import { engine, modules, saveBatu, loadBatu, clearSave } from './engine';
+
+export interface CompletedTrick {
+  plays: { player: PlayerId; card: Card }[];
+  winner: PlayerId;
+}
+
+export interface SummaryInfo {
+  gameId: GameId;
+  roundIndex: number;
+  result: RoundResult;
+}
+
+interface BatuStore {
+  batu: BatuState | null;
+  names: string[];
+  revealed: boolean; // is the private view unlocked?
+  ritualPending: boolean; // show the dealing ritual after a deal
+  trumpBidsSeen: boolean; // Trump bid-reveal acknowledged this game
+  lastTrick: CompletedTrick | null; // public trick result awaiting acknowledgement
+  summaryPending: SummaryInfo | null; // round summary awaiting acknowledgement
+  tallyPending: GameId | null; // penta tally awaiting acknowledgement (after round 4)
+  selection: Card[]; // multi-card selection (Capsa combo, Hearts pass)
+  overlay: 'none' | 'sheet' | 'standings' | 'menu'; // public overlay on top of play
+
+  newBatu: (names: string[], settings: BatuSettings) => void;
+  resume: () => boolean;
+  deal: () => void;
+  reveal: () => void;
+  acceptRitual: () => void;
+  acceptBids: () => void;
+  apply: (move: unknown) => void;
+  clearTrick: () => void;
+  acceptSummary: () => void;
+  acceptTally: () => void;
+  undo: () => void;
+  toggleSelect: (card: Card) => void;
+  clearSelection: () => void;
+  setOverlay: (overlay: BatuStore['overlay']) => void;
+  abandon: () => void;
+}
+
+interface PublicTrickView {
+  currentTrick?: { leader: PlayerId; plays: { player: PlayerId; card: Card }[] } | null;
+  trumpSuit?: string | null;
+}
+
+/** Reconstruct a just-completed trick (for the public trick-result moment). */
+function captureTrick(before: BatuState, player: PlayerId, move: unknown): CompletedTrick | null {
+  if (!before.active) return null;
+  const gid = before.active.gameId;
+  if (gid !== 'trump' && gid !== 'hearts' && gid !== 'rumpun') return null;
+  if (typeof move !== 'object' || move === null || (move as { type?: string }).type !== 'play') {
+    return null;
+  }
+  const card = (move as { card?: Card }).card;
+  if (!card) return null;
+
+  const pub = modules[gid].publicView(before.active.state as never) as PublicTrickView;
+  const trick = pub.currentTrick;
+  if (!trick || trick.plays.length !== 3) return null;
+
+  const plays = [...trick.plays, { player, card }];
+  const trumpSuit = (pub.trumpSuit ?? null) as Card['suit'] | null;
+  return { plays, winner: trickWinner({ leader: trick.leader, plays }, trumpSuit) };
+}
+
+export const useBatu = create<BatuStore>((set, get) => ({
+  batu: null,
+  names: [],
+  revealed: false,
+  ritualPending: false,
+  trumpBidsSeen: false,
+  lastTrick: null,
+  summaryPending: null,
+  tallyPending: null,
+  selection: [],
+  overlay: 'none',
+
+  newBatu: (names, settings) => {
+    const batu = engine.create(names as [string, string, string, string], settings);
+    saveBatu(batu);
+    set({
+      batu,
+      names,
+      revealed: false,
+      ritualPending: false,
+      trumpBidsSeen: false,
+      lastTrick: null,
+      summaryPending: null,
+      tallyPending: null,
+      selection: [],
+      overlay: 'none',
+    });
+  },
+
+  resume: () => {
+    const batu = loadBatu();
+    if (!batu) return false;
+    set({
+      batu,
+      names: batu.players,
+      revealed: false, // never resume into a private view
+      ritualPending: false,
+      trumpBidsSeen: true, // if mid-game, bids were already revealed
+      lastTrick: null,
+      summaryPending: null,
+      tallyPending: null,
+      selection: [],
+      overlay: 'none',
+    });
+    return true;
+  },
+
+  deal: () => {
+    const batu = get().batu;
+    if (!batu || batu.phase !== 'awaiting-deal') return;
+    const next = engine.startNextGame(batu);
+    saveBatu(next);
+    set({
+      batu: next,
+      ritualPending: true,
+      revealed: false,
+      trumpBidsSeen: false,
+      selection: [],
+      lastTrick: null,
+    });
+  },
+
+  reveal: () => set({ revealed: true }),
+  acceptRitual: () => set({ ritualPending: false }),
+  acceptBids: () => set({ trumpBidsSeen: true }),
+
+  apply: (move) => {
+    const batu = get().batu;
+    if (!batu) return;
+    const player = engine.pendingPlayers(batu)[0];
+    const trick = captureTrick(batu, player, move);
+    const next = engine.applyMove(batu, player, move);
+    saveBatu(next);
+
+    let summaryPending = get().summaryPending;
+    let tallyPending = get().tallyPending;
+    if (batu.active && batu.phase === 'playing' && next.phase !== 'playing') {
+      const gid = batu.active.gameId;
+      const results = next.sheet[gid];
+      summaryPending = {
+        gameId: gid,
+        roundIndex: batu.roundIndex,
+        result: results[results.length - 1],
+      };
+      if (batu.roundIndex === 3) tallyPending = gid;
+    }
+
+    set({
+      batu: next,
+      revealed: false,
+      selection: [],
+      lastTrick: trick,
+      summaryPending,
+      tallyPending,
+    });
+  },
+
+  clearTrick: () => set({ lastTrick: null }),
+  acceptSummary: () => set({ summaryPending: null }),
+  acceptTally: () => set({ tallyPending: null }),
+
+  undo: () => {
+    const batu = get().batu;
+    if (!batu) return;
+    const prev = engine.undo(batu);
+    if (prev === batu) return;
+    saveBatu(prev);
+    set({ batu: prev, revealed: true, selection: [], lastTrick: null });
+  },
+
+  toggleSelect: (card) => {
+    const selection = get().selection;
+    const has = selection.some((c) => c.suit === card.suit && c.rank === card.rank);
+    set({
+      selection: has
+        ? selection.filter((c) => !(c.suit === card.suit && c.rank === card.rank))
+        : [...selection, card],
+    });
+  },
+  clearSelection: () => set({ selection: [] }),
+
+  setOverlay: (overlay) => set({ overlay }),
+  abandon: () => {
+    clearSave();
+    set({ batu: null, overlay: 'none' });
+  },
+}));
+
+/** The seat the engine is currently waiting on, or null. */
+export function currentPlayer(batu: BatuState): PlayerId | null {
+  return engine.pendingPlayers(batu)[0] ?? null;
+}
