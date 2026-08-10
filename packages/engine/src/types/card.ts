@@ -8,4 +8,7 @@ export interface Card {
 /** Seat index, clockwise. Fixed for the whole batu. */
 export type PlayerId = 0 | 1 | 2 | 3;
 
+/** All four seats, in clockwise order. */
+export const PLAYER_IDS: readonly PlayerId[] = [0, 1, 2, 3];
+
 export type GameId = 'trump' | 'seven' | 'hearts' | 'rumpun' | 'capsa';

@@ -1,5 +1,8 @@
 import type { Card, PlayerId, GameId } from './card';
 
+/** Which direction of cumulative game score places 1st in the penta tally. */
+export type RankingDirection = 'high' | 'low';
+
 export interface DealContext {
   hands: Record<PlayerId, Card[]>;
   dealer: PlayerId;
@@ -16,7 +19,7 @@ export interface RoundResult {
 export interface GameModule<S, M> {
   readonly id: GameId;
   /** Which direction places 1st. Scoring reads this; the tally never hardcodes it. */
-  readonly rankingDirection: 'high' | 'low';
+  readonly rankingDirection: RankingDirection;
 
   setup(ctx: DealContext): S;
 
