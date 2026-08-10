@@ -1,7 +1,17 @@
 export type { Suit, Rank, Card, PlayerId, GameId } from './types/card';
 export { PLAYER_IDS } from './types/card';
 export type { DealContext, RoundResult, GameModule, RankingDirection } from './types/game';
-export { STANDARD_DECK, shuffle, deal } from './card/deck';
+export {
+  STANDARD_DECK,
+  shuffle,
+  middleCardValue,
+  firstCardRecipient,
+  dealClockwise,
+  dealForGame,
+} from './card/deck';
+export type { DealOutcome } from './card/deck';
+export type { Rng } from './rng';
+export { makeRng, pick } from './rng';
 export {
   STANDARD_SUIT_RANK,
   CAPSA_SUIT_RANK,
@@ -25,3 +35,16 @@ export {
   champion,
   roundTo2dp,
 } from './scoring';
+
+export { GAME_ORDER, nextDealer, createEngine, BATU_SCHEMA_VERSION } from './flow';
+export type {
+  BatuState,
+  BatuSettings,
+  ActiveGame,
+  Phase,
+  ModuleRegistry,
+  AnyGameModule,
+  Engine,
+  EngineOptions,
+  SerializedBatu,
+} from './flow';

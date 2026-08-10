@@ -13,5 +13,14 @@ export default tseslint.config(
     ],
   },
   ...tseslint.configs.recommended,
+  {
+    rules: {
+      // Allow intentionally-unused args/vars when prefixed with `_`.
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
+    },
+  },
   prettierConfig,
 );
