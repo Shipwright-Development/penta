@@ -85,3 +85,6 @@ export type {
   Bid,
   BidSuit,
 } from './games/trump';
+
+export { createCapsaModule, classify, beats, allCombos } from './games/capsa';
+export type { CapsaState, CapsaMove, Combo, ComboType } from './games/capsa';
