@@ -33,6 +33,7 @@ export {
   pentaTally,
   pentaStandings,
   champion,
+  roundMarkers,
   roundTo2dp,
 } from './scoring';
 
@@ -48,3 +49,39 @@ export type {
   EngineOptions,
   SerializedBatu,
 } from './flow';
+
+export {
+  newTrick,
+  ledSuit,
+  nextToPlay,
+  isTrickComplete,
+  trickWinner,
+  followSuitMoves,
+  leadMoves,
+} from './trick/trick';
+export type { PlayedCard, TrickState } from './trick/trick';
+
+export {
+  createTrumpModule,
+  trumpDealValid,
+  trumpScores,
+  cardBidValue,
+  bidValue,
+  bidSuit,
+  trumpFromBid,
+  highestBidder,
+  legalBids,
+  isValidBid,
+  isNumberCard,
+  isFaceCard,
+  MIN_TWO_CARD_BID,
+  MAX_SHOUT,
+} from './games/trump';
+export type {
+  TrumpState,
+  TrumpMove,
+  TrumpPhase,
+  TrumpScoringInput,
+  Bid,
+  BidSuit,
+} from './games/trump';
