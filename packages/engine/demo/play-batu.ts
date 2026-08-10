@@ -13,13 +13,13 @@ import { dealForGame } from '../src/card/deck';
 import { makeRng } from '../src/rng';
 import { createEngine } from '../src/flow/engine';
 import type { BatuState } from '../src/flow/state';
-import { makeStubModule } from '../src/flow/stub';
 import { createTrumpModule, trumpDealValid } from '../src/games/trump/trump';
 import type { TrumpState, TrumpMove } from '../src/games/trump/trump';
 import { bidValue, bidSuit } from '../src/games/trump/bid';
 import { createCapsaModule } from '../src/games/capsa/capsa';
 import { createHeartsModule } from '../src/games/hearts/hearts';
 import { createRumpunModule } from '../src/games/rumpun/rumpun';
+import { createSevenModule } from '../src/games/seven/seven';
 
 const NAMES = ['Ferdi', 'Adi', 'Budi', 'Cita'] as const;
 const name = (p: PlayerId) => NAMES[p];
@@ -68,11 +68,11 @@ function demoTrumpRound() {
 // ---------------------------------------------------------------------------
 
 function demoFullBatu() {
-  console.log('\n\n=== A FULL BATU (only Seven stubbed) ===\n');
+  console.log('\n\n=== A FULL BATU (all five games real) ===\n');
   const engine = createEngine({
     modules: {
       trump: createTrumpModule(),
-      seven: makeStubModule('seven'),
+      seven: createSevenModule(),
       hearts: createHeartsModule(),
       rumpun: createRumpunModule(),
       capsa: createCapsaModule(),

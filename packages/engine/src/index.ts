@@ -94,3 +94,6 @@ export type { HeartsState, HeartsMove, HeartsPhase } from './games/hearts';
 
 export { createRumpunModule } from './games/rumpun';
 export type { RumpunState, RumpunMove, Pile } from './games/rumpun';
+
+export { createSevenModule } from './games/seven';
+export type { SevenState, SevenMove, SuitLine } from './games/seven';

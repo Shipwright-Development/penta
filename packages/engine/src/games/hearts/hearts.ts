@@ -1,7 +1,6 @@
 import type { Card, PlayerId } from '../../types/card';
 import { PLAYER_IDS } from '../../types/card';
 import type { GameModule, DealContext, RoundResult } from '../../types/game';
-import type { PlayerScores } from '../../scoring/types';
 import { zeroScores } from '../../scoring/util';
 import { roundMarkers } from '../../scoring/markers';
 import type { TrickState } from '../../trick/trick';
