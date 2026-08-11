@@ -18,7 +18,7 @@ import {
 } from '@penta/engine';
 import { useT } from '../i18n';
 import { theme } from '../theme';
-import { suitGlyph, cardText, sortHand } from '../format';
+import { suitGlyph, cardText, sortHand, isRed } from '../format';
 import { engine, activePublicView, activePrivateView } from '../engine';
 import { useBatu } from '../batuStore';
 import { Board } from './ui';
@@ -544,11 +544,34 @@ function CapsaView({ player }: { player: PlayerId }) {
 // Seven
 // ---------------------------------------------------------------------------
 
-function lineText(line: SevenLine): string {
-  if (!line.opened) return '—';
-  const low = line.aceLow ? 'A' : String(line.lowNonAce);
-  const high = line.aceHigh ? 'A' : String(line.highNonAce);
-  return `${low}–${high}`;
+const SEVEN_RANKS: Rank[] = [2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K'];
+
+/** The actual cards on a suit's line, low → high, reconstructed from its span. */
+function lineCards(suit: Suit, line: SevenLine): CardType[] {
+  if (!line.opened || line.lowNonAce === null || line.highNonAce === null) return [];
+  const lo = SEVEN_RANKS.indexOf(line.lowNonAce);
+  const hi = SEVEN_RANKS.indexOf(line.highNonAce);
+  const cards: CardType[] = [];
+  if (line.aceLow) cards.push({ suit, rank: 'A' });
+  for (let i = lo; i <= hi; i++) cards.push({ suit, rank: SEVEN_RANKS[i] });
+  if (line.aceHigh) cards.push({ suit, rank: 'A' });
+  return cards;
+}
+
+/** A small board card showing a corner index, overlapped into a fan. */
+function LineCard({ card, overlap }: { card: CardType; overlap: boolean }) {
+  const color = isRed(card.suit) ? theme.red : theme.ink;
+  const anchor = card.rank === 7; // the 7 that opened the line
+  return (
+    <View
+      style={[styles.lineCard, overlap && styles.lineCardOverlap, anchor && styles.lineCardAnchor]}
+    >
+      <Text style={[styles.lineCardIndex, { color }]}>
+        {card.rank}
+        {suitGlyph(card.suit)}
+      </Text>
+    </View>
+  );
 }
 
 function SevenView({ player }: { player: PlayerId }) {
@@ -602,12 +625,24 @@ function SevenView({ player }: { player: PlayerId }) {
         <Text style={styles.trump}>{t('seven.aces', { conv })}</Text>
         <Text style={styles.turn}>{t('turn.turn', { name: names[player] })}</Text>
       </View>
-      <View style={styles.boardLines}>
-        {suits.map((suit) => (
-          <Text key={suit} style={styles.lineText}>
-            {suitGlyph(suit)} {lineText(pub.lines[suit])}
-          </Text>
-        ))}
+      <View style={styles.sevenBoard}>
+        {suits.map((suit) => {
+          const cards = lineCards(suit, pub.lines[suit]);
+          return (
+            <View key={suit} style={styles.sevenRow}>
+              <Text style={styles.sevenSuit}>{suitGlyph(suit)}</Text>
+              {cards.length === 0 ? (
+                <Text style={styles.sevenEmpty}>—</Text>
+              ) : (
+                <View style={styles.fan}>
+                  {cards.map((c, i) => (
+                    <LineCard key={i} card={c} overlap={i > 0} />
+                  ))}
+                </View>
+              )}
+            </View>
+          );
+        })}
       </View>
       <View style={styles.spacer} />
       <View style={styles.handTop}>
@@ -788,14 +823,24 @@ const styles = StyleSheet.create({
   pilesRow: { gap: 2, paddingVertical: 4 },
   pileText: { color: '#cfe3d8', fontSize: 12 },
   capsaButtons: { flexDirection: 'row', gap: 10, alignItems: 'center', marginTop: 6 },
-  boardLines: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-    paddingVertical: 12,
-    justifyContent: 'center',
+  sevenBoard: { gap: 8, paddingVertical: 12, alignSelf: 'center' },
+  sevenRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 58 },
+  sevenSuit: { color: '#fff', fontSize: 20, fontWeight: '700', width: 24 },
+  sevenEmpty: { color: '#9fb8ab', fontSize: 18 },
+  fan: { flexDirection: 'row', alignItems: 'center' },
+  lineCard: {
+    width: 42,
+    height: 56,
+    borderRadius: 6,
+    backgroundColor: theme.cardBg,
+    borderWidth: 1,
+    borderColor: theme.border,
+    paddingTop: 3,
+    paddingLeft: 4,
   },
-  lineText: { color: '#fff', fontSize: 18, fontWeight: '600' },
+  lineCardOverlap: { marginLeft: -24 },
+  lineCardAnchor: { borderColor: theme.accent, borderWidth: 2 },
+  lineCardIndex: { fontSize: 14, fontWeight: '800' },
   acePrompt: { marginTop: 10, gap: 8, alignItems: 'center' },
   aceButtons: { flexDirection: 'row', gap: 10 },
 });
