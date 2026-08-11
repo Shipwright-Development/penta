@@ -12,7 +12,7 @@ import {
   Champion,
 } from '../src/components/flow';
 import { ScoreSheet, Standings, Menu } from '../src/components/scores';
-import { GameView, BidReveal } from '../src/components/games';
+import { GameView, BidReveal, NoMorePlays } from '../src/components/games';
 
 export default function PlayScreen() {
   const router = useRouter();
@@ -47,6 +47,10 @@ export default function PlayScreen() {
   if (batu.active?.gameId === 'trump' && !trumpBidsSeen) {
     const pub = activePublicView(batu) as { phase: string };
     if (pub.phase === 'adjustment' || pub.phase === 'playing') return <BidReveal />;
+  }
+  if (batu.active?.gameId === 'seven') {
+    const pub = activePublicView(batu) as { noPlaysLeft?: boolean };
+    if (pub.noPlaysLeft) return <NoMorePlays />;
   }
 
   const player = currentPlayer(batu);

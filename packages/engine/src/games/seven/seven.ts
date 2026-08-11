@@ -248,6 +248,10 @@ export function createSevenModule(): GameModule<SevenState, SevenMove> {
         turnsTaken: state.turnsTaken,
         lines: state.lines,
         discardCounts: PLAYER_IDS.map((p) => state.discards[p].length),
+        // Once no seat can play, the board is frozen and the rest is all
+        // discards — the UI can offer to skip straight to scoring.
+        noPlaysLeft:
+          state.turnsTaken < 52 && PLAYER_IDS.every((p) => legalPlays(state, p).length === 0),
       };
     },
 

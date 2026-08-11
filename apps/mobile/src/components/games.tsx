@@ -575,6 +575,50 @@ function VCard({ card, first, anchor }: { card: CardType; first: boolean; anchor
   );
 }
 
+/** Whether a suit's line has reached a terminal and can take no more cards. */
+function sevenCollapsed(line: SevenLine, convention: 'none' | 'under' | 'above'): boolean {
+  if (!line.opened) return false;
+  if (convention === 'above') return line.aceHigh || line.lowNonAce === 2;
+  if (convention === 'under') return line.highNonAce === 'K' || line.aceLow;
+  return false;
+}
+
+/** The player's own discards — private, shown only behind their handoff. */
+function DiscardsRow({ player }: { player: PlayerId }) {
+  const t = useT();
+  const batu = useBatu((s) => s.batu) as BatuState;
+  const priv = activePrivateView(batu, player) as { myDiscards?: CardType[] };
+  const discards = priv.myDiscards ?? [];
+  return (
+    <View style={styles.discardsRow}>
+      <Text style={styles.discardsLabel}>{t('seven.discards')}:</Text>
+      {discards.length > 0 ? (
+        <ScrollView horizontal contentContainerStyle={styles.discardsList}>
+          {discards.map((c, i) => (
+            <Card key={i} card={c} size="sm" />
+          ))}
+        </ScrollView>
+      ) : (
+        <Text style={styles.discardsLabel}>{t('seven.noDiscards')}</Text>
+      )}
+    </View>
+  );
+}
+
+/** Seven: public prompt to skip the all-discards endgame straight to scoring. */
+export function NoMorePlays() {
+  const t = useT();
+  const finish = useBatu((s) => s.finishSevenDiscards);
+  return (
+    <View style={styles.publicRoot}>
+      <Text style={styles.h1}>{t('seven.noPlaysTitle')}</Text>
+      <Text style={styles.muted}>{t('seven.noPlaysBody')}</Text>
+      <View style={styles.gap} />
+      <Button label={t('seven.discardRest')} onPress={finish} />
+    </View>
+  );
+}
+
 function SevenView({ player }: { player: PlayerId }) {
   const t = useT();
   const { batu, names, apply } = useCtx();
@@ -628,7 +672,34 @@ function SevenView({ player }: { player: PlayerId }) {
       </View>
       <View style={styles.sevenBoard}>
         {suits.map((suit) => {
-          const run = suitRun(suit, pub.lines[suit]);
+          const line = pub.lines[suit];
+          const run = suitRun(suit, line);
+
+          // A dead line is compacted into a small pile, highest card on top.
+          if (run && sevenCollapsed(line, pub.convention)) {
+            const topRank = line.aceHigh ? 'A' : (line.highNonAce as Rank);
+            const lowRank = line.aceLow ? 'A' : (line.lowNonAce as Rank);
+            const color = isRed(suit) ? theme.red : theme.ink;
+            return (
+              <View key={suit} style={styles.sevenCol}>
+                <View style={styles.upperZone} />
+                <View style={styles.pile}>
+                  <View style={[styles.vcard, styles.pileShadow]} />
+                  <View style={[styles.vcard, styles.pileShadow, styles.pileOffset]} />
+                  <View style={[styles.vcard, styles.pileOffset]}>
+                    <Text style={[styles.vindex, { color }]}>
+                      {topRank}
+                      {suitGlyph(suit)}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.pileCaption}>
+                  {String(lowRank)}–{String(topRank)}
+                </Text>
+              </View>
+            );
+          }
+
           return (
             <View key={suit} style={styles.sevenCol}>
               <View style={styles.upperZone}>
@@ -652,6 +723,7 @@ function SevenView({ player }: { player: PlayerId }) {
           );
         })}
       </View>
+      <DiscardsRow player={player} />
       <View style={styles.spacer} />
       <View style={styles.handTop}>
         <Text style={styles.handHint}>
@@ -860,6 +932,19 @@ const styles = StyleSheet.create({
   },
   vindex: { fontSize: 14, fontWeight: '800' },
   vindexEmpty: { color: '#cfe3d8', fontSize: 18, fontWeight: '700' },
+  pile: { alignItems: 'center' },
+  pileShadow: { backgroundColor: 'rgba(255,255,255,0.45)' },
+  pileOffset: { marginTop: -56 },
+  pileCaption: { color: '#cfe3d8', fontSize: 12, marginTop: 6, fontWeight: '700' },
+  discardsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 4,
+    justifyContent: 'center',
+  },
+  discardsLabel: { color: '#cfe3d8', fontSize: 13 },
+  discardsList: { flexDirection: 'row', gap: 6 },
   acePrompt: { marginTop: 10, gap: 8, alignItems: 'center' },
   aceButtons: { flexDirection: 'row', gap: 10 },
 });

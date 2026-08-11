@@ -134,7 +134,14 @@ const STRINGS = {
   'seven.aceWhich': { en: 'Place the ace at which end?', id: 'Taruh as di ujung mana?' },
   'seven.aceAboveBtn': { en: 'Above the King', id: 'Di atas King' },
   'seven.aceBelowBtn': { en: 'Below the 2', id: 'Di bawah 2' },
-  'seven.discards': { en: 'Discards', id: 'Buangan' },
+  'seven.discards': { en: 'Your discards', id: 'Buanganmu' },
+  'seven.noDiscards': { en: 'none yet', id: 'belum ada' },
+  'seven.noPlaysTitle': { en: 'No more playable cards', id: 'Tak ada kartu yang bisa dimainkan' },
+  'seven.noPlaysBody': {
+    en: 'No one can play — every remaining card is a discard.',
+    id: 'Tak ada yang bisa bermain — semua sisa kartu jadi buangan.',
+  },
+  'seven.discardRest': { en: 'Discard the rest & score', id: 'Buang sisanya & hitung skor' },
 
   'rumpun.trumpIs': { en: 'Trump {suit}', id: 'Truf {suit}' },
   'rumpun.piles': { en: 'Table piles', id: 'Tumpukan meja' },

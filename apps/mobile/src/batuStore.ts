@@ -48,6 +48,7 @@ interface BatuStore {
   toggleSelect: (card: Card) => void;
   selectOne: (card: Card) => void;
   clearSelection: () => void;
+  finishSevenDiscards: () => void;
   setOverlay: (overlay: BatuStore['overlay']) => void;
   setSortMode: (mode: BatuStore['sortMode']) => void;
   abandon: () => void;
@@ -205,6 +206,39 @@ export const useBatu = create<BatuStore>((set, get) => ({
         : [card],
     })),
   clearSelection: () => set({ selection: [] }),
+
+  // Seven only: once nobody can play, discard every remaining card and finish.
+  // Discards only sum for scoring, so which card each seat sheds and in what
+  // order is irrelevant — this is score-identical to playing it all out.
+  finishSevenDiscards: () => {
+    const start = get().batu;
+    if (!start || start.active?.gameId !== 'seven') return;
+    let batu = start;
+    let guard = 0;
+    while (batu.active?.gameId === 'seven' && batu.phase === 'playing' && guard++ < 100) {
+      const player = engine.pendingPlayers(batu)[0];
+      if (player === undefined) break;
+      const priv = modules.seven.privateView(batu.active.state as never, player) as {
+        hand: Card[];
+      };
+      if (priv.hand.length === 0) break;
+      batu = engine.applyMove(batu, player, { type: 'discard', card: priv.hand[0] });
+    }
+    saveBatu(batu);
+
+    let summaryPending = get().summaryPending;
+    let tallyPending = get().tallyPending;
+    if (start.phase === 'playing' && batu.phase !== 'playing') {
+      const results = batu.sheet.seven;
+      summaryPending = {
+        gameId: 'seven',
+        roundIndex: start.roundIndex,
+        result: results[results.length - 1],
+      };
+      if (start.roundIndex === 3) tallyPending = 'seven';
+    }
+    set({ batu, revealed: false, selection: [], lastTrick: null, summaryPending, tallyPending });
+  },
 
   setOverlay: (overlay) => set({ overlay }),
   setSortMode: (sortMode) => set({ sortMode }),

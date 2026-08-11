@@ -154,6 +154,25 @@ describe('line collapse and must-play', () => {
     expect(moves.some((m) => m.type === 'discard')).toBe(false);
     expect(moves.some((m) => isPlay(m, c('clubs', 8)))).toBe(true);
   });
+
+  it('noPlaysLeft flags when every line is dead and nobody can play', () => {
+    const dead = line({ opened: true, lowNonAce: 2, highNonAce: 'K' }); // K under-convention → collapsed
+    const s = mkState({
+      convention: 'under',
+      turnsTaken: 20,
+      lines: { clubs: dead, diamonds: dead, hearts: dead, spades: dead },
+      hands: {
+        0: [c('clubs', 3)],
+        1: [c('diamonds', 4)],
+        2: [c('hearts', 5)],
+        3: [c('spades', 6)],
+      },
+    });
+    expect((mod.publicView(s) as { noPlaysLeft: boolean }).noPlaysLeft).toBe(true);
+
+    const fresh = mod.setup({ hands: dealForGame(0, makeRng(1)).hands, dealer: 0, roundIndex: 0 });
+    expect((mod.publicView(fresh) as { noPlaysLeft: boolean }).noPlaysLeft).toBe(false);
+  });
 });
 
 // ---------------------------------------------------------------------------
