@@ -17,15 +17,21 @@ export function Button({ label, onPress, disabled, variant = 'primary', small, t
       disabled={disabled}
       testID={testID}
       accessibilityRole="button"
-      style={({ pressed }) => [
-        styles.base,
-        small && styles.small,
-        variant === 'primary' && styles.primary,
-        variant === 'ghost' && styles.ghost,
-        variant === 'danger' && styles.danger,
-        pressed && styles.pressed,
-        disabled && styles.disabled,
-      ]}
+      style={(state) => {
+        const { pressed } = state;
+        // `hovered` is a react-native-web extension not in the RN types.
+        const hovered = (state as { hovered?: boolean }).hovered;
+        return [
+          styles.base,
+          small && styles.small,
+          variant === 'primary' && styles.primary,
+          variant === 'ghost' && styles.ghost,
+          variant === 'danger' && styles.danger,
+          hovered && !disabled && styles.hover,
+          pressed && styles.pressed,
+          disabled && styles.disabled,
+        ];
+      }}
     >
       <Text
         style={[styles.label, small && styles.labelSmall, variant === 'ghost' && styles.labelGhost]}
@@ -46,11 +52,12 @@ const styles = StyleSheet.create({
   },
   small: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 8 },
   primary: { backgroundColor: theme.accent },
-  ghost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: theme.border },
+  ghost: { backgroundColor: '#ffffff', borderWidth: 1, borderColor: theme.border },
   danger: { backgroundColor: theme.danger },
+  hover: { opacity: 0.9, transform: [{ translateY: -1 }] },
   pressed: { opacity: 0.8 },
   disabled: { opacity: 0.4 },
   label: { fontSize: 16, fontWeight: '700', color: theme.accentInk },
   labelSmall: { fontSize: 14 },
-  labelGhost: { color: theme.text, fontWeight: '600' },
+  labelGhost: { color: theme.text, fontWeight: '700' },
 });

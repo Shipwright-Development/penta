@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   GAME_ORDER,
@@ -9,9 +9,11 @@ import {
   type GameId,
   type PlayerId,
   type BatuState,
+  type Card,
 } from '@penta/engine';
 import { useT, gameNameKey } from '../i18n';
 import { theme } from '../theme';
+import { cardText } from '../format';
 import { engine } from '../engine';
 import { useBatu } from '../batuStore';
 import { Board, H1 } from './ui';
@@ -34,11 +36,11 @@ export function ScoreSheet() {
         <H1>{t('sheet.title')}</H1>
         <Button label={t('sheet.close')} variant="ghost" small onPress={() => setOverlay('none')} />
       </View>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <View style={styles.sheetGrid}>
         {GAME_ORDER.map((gid) => (
           <GameBlock key={gid} gameId={gid} names={names} batu={batu} />
         ))}
-      </ScrollView>
+      </View>
     </Board>
   );
 }
@@ -115,6 +117,44 @@ export function Standings() {
   );
 }
 
+export function History() {
+  const t = useT();
+  const names = useBatu((s) => s.names);
+  const history = useBatu((s) => s.history);
+  const setOverlay = useBatu((s) => s.setOverlay);
+  const recent = history.slice(-5).reverse();
+
+  const label = (kind: string, cards?: Card[], amount?: number) => {
+    if (kind === 'play') return t('log.played', { cards: (cards ?? []).map(cardText).join(' ') });
+    if (kind === 'pass') return t('log.passed');
+    if (kind === 'pass3') return t('log.passed3');
+    if (kind === 'bid') return t('log.bid');
+    if (kind === 'adjust') return t('log.adjust', { n: amount ?? 0 });
+    return t('log.discard');
+  };
+
+  return (
+    <Board controls={false}>
+      <View style={styles.top}>
+        <H1>{t('history.title')}</H1>
+        <Button label={t('sheet.close')} variant="ghost" small onPress={() => setOverlay('none')} />
+      </View>
+      <View style={styles.historyBox}>
+        {recent.length === 0 ? (
+          <Text style={styles.sub}>{t('history.empty')}</Text>
+        ) : (
+          recent.map((e, i) => (
+            <Text key={i} style={styles.historyItem}>
+              <Text style={styles.historyName}>{names[e.player]}</Text>{' '}
+              {label(e.kind, e.cards, e.amount)}
+            </Text>
+          ))
+        )}
+      </View>
+    </Board>
+  );
+}
+
 export function Menu() {
   const t = useT();
   const router = useRouter();
@@ -163,12 +203,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 8,
   },
-  scroll: { gap: 16, paddingBottom: 40 },
+  sheetGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, justifyContent: 'center' },
   sub: { color: '#d7ebe0', textAlign: 'center', marginBottom: 12 },
-  block: { backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: 10 },
-  blockTitle: { color: theme.accent, fontWeight: '800', fontSize: 16, marginBottom: 6 },
-  trow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 2 },
-  cLabel: { width: 44, color: '#cfe3d8', fontSize: 12 },
+  block: { backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: 10, width: 336 },
+  blockTitle: { color: theme.accent, fontWeight: '800', fontSize: 15, marginBottom: 4 },
+  trow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 1 },
+  cLabel: { width: 36, color: '#cfe3d8', fontSize: 12 },
   cCell: { flex: 1, color: '#fff', fontSize: 13, textAlign: 'right' },
   pentaLabel: { color: theme.accent, fontWeight: '700' },
   pentaCell: { fontWeight: '800', color: theme.accent },
@@ -184,4 +224,13 @@ const styles = StyleSheet.create({
   menu: { gap: 12, maxWidth: 360, marginTop: 12 },
   langRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   langLabel: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  historyBox: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 10,
+    padding: 16,
+    gap: 10,
+    maxWidth: 460,
+  },
+  historyItem: { color: '#e6f2ea', fontSize: 16 },
+  historyName: { color: theme.accent, fontWeight: '800' },
 });

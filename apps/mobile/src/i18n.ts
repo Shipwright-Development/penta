@@ -186,7 +186,17 @@ const STRINGS = {
 
   'common.menu': { en: 'Menu', id: 'Menu' },
   'common.scores': { en: 'Scores', id: 'Skor' },
+  'common.moves': { en: 'Moves', id: 'Langkah' },
   'common.close': { en: 'Close', id: 'Tutup' },
+
+  'history.title': { en: 'Recent moves', id: 'Langkah terakhir' },
+  'history.empty': { en: 'No moves yet', id: 'Belum ada langkah' },
+  'log.played': { en: 'played {cards}', id: 'memainkan {cards}' },
+  'log.passed': { en: 'passed', id: 'lewat' },
+  'log.passed3': { en: 'passed 3 cards', id: 'memberi 3 kartu' },
+  'log.bid': { en: 'placed a bid', id: 'memasang tawaran' },
+  'log.adjust': { en: 'adjusted bids by {n}', id: 'menyesuaikan tawaran {n}' },
+  'log.discard': { en: 'discarded a card', id: 'membuang kartu' },
 } satisfies Record<string, Entry>;
 
 export type StringKey = keyof typeof STRINGS;

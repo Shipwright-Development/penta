@@ -5,6 +5,7 @@ import {
   bidSuit,
   isNumberCard,
   isFaceCard,
+  PLAYER_IDS,
   type PlayerId,
   type Suit,
   type Rank,
@@ -18,7 +19,7 @@ import {
 } from '@penta/engine';
 import { useT } from '../i18n';
 import { theme } from '../theme';
-import { suitGlyph, cardText, sortHand, isRed } from '../format';
+import { suitGlyph, sortHand, isRed } from '../format';
 import { engine, activePublicView, activePrivateView } from '../engine';
 import { useBatu } from '../batuStore';
 import { Board } from './ui';
@@ -436,37 +437,155 @@ function HeartsView({ player }: { player: PlayerId }) {
 // Rumpun
 // ---------------------------------------------------------------------------
 
+/** A table pile: face-up top with its face-down cards shown as slivers below. */
+function PileView({
+  pile,
+  legal,
+  selected,
+  onPress,
+  testID,
+}: {
+  pile: { up: CardType | null; down: number };
+  legal?: boolean;
+  selected?: boolean;
+  onPress?: () => void;
+  testID?: string;
+}) {
+  return (
+    <View style={styles.pileCol}>
+      {pile.up ? (
+        <Card
+          card={pile.up}
+          size="sm"
+          selected={selected}
+          disabled={onPress !== undefined && !legal}
+          testID={legal ? testID : undefined}
+          onPress={legal ? onPress : undefined}
+        />
+      ) : (
+        <View style={styles.pileGone} />
+      )}
+      <View style={styles.pileDowns}>
+        {Array.from({ length: pile.down }).map((_, i) => (
+          <View key={i} style={[styles.miniBack, i > 0 && styles.miniBackOverlap]} />
+        ))}
+      </View>
+    </View>
+  );
+}
+
 function RumpunView({ player }: { player: PlayerId }) {
   const t = useT();
-  const { batu, names } = useCtx();
+  const { batu, names, apply } = useCtx();
   const pub = activePublicView(batu) as RumpunPub;
   const priv = activePrivateView(batu, player) as { hand: CardType[] };
   const moves = engine.legalMoves(batu, player) as { type: 'play'; card: CardType }[];
   const legalCards = moves.map((m) => m.card);
-  const pileTops = pub.piles[player].flatMap((pile) => (pile.up ? [pile.up] : []));
-  const handCards = [...priv.hand, ...pileTops];
+  const selection = useBatu((s) => s.selection);
+  const selectOne = useBatu((s) => s.selectOne);
+  const sortMode = useBatu((s) => s.sortMode);
+  const undo = useBatu((s) => s.undo);
+  const [confirmUndo, setConfirmUndo] = useState(false);
+
+  const isLegal = (c: CardType) => legalCards.some((x) => sameCard(x, c));
+  const isSel = (c: CardType) => selection.some((x) => sameCard(x, c));
+  const picked = selection[0];
+  const opponents = PLAYER_IDS.filter((p) => p !== player);
 
   return (
-    <TrickBoard
-      player={player}
-      info={t('rumpun.trumpIs', { suit: suitGlyph(pub.trumpSuit) })}
-      turn={t('turn.turn', { name: names[player] })}
-      currentTrick={pub.currentTrick}
-      handCards={handCards}
-      legalCards={legalCards}
-      extras={
-        <View style={styles.pilesRow}>
-          {[0, 1, 2, 3].map((p) => (
-            <Text key={p} style={styles.pileText}>
-              {names[p as PlayerId]}:{' '}
-              {pub.piles[p as PlayerId]
-                .map((pile) => (pile.up ? cardText(pile.up) : '▨'))
-                .join(' ')}
-            </Text>
-          ))}
-        </View>
-      }
-    />
+    <Board>
+      <View style={styles.infoRow}>
+        <Text style={styles.trump}>{t('rumpun.trumpIs', { suit: suitGlyph(pub.trumpSuit) })}</Text>
+        <Text style={styles.turn}>{t('turn.turn', { name: names[player] })}</Text>
+      </View>
+
+      {/* Opponents' table piles */}
+      <View style={styles.rumpunTable}>
+        {opponents.map((p) => (
+          <View key={p} style={styles.rumpunPlayer}>
+            <Text style={styles.rumpunName}>{names[p]}</Text>
+            <View style={styles.rumpunPiles}>
+              {pub.piles[p].map((pile, i) => (
+                <PileView key={i} pile={pile} />
+              ))}
+            </View>
+          </View>
+        ))}
+      </View>
+
+      {/* Trick in progress */}
+      <View style={styles.trickArea}>
+        {pub.currentTrick && pub.currentTrick.plays.length > 0 ? (
+          pub.currentTrick.plays.map((pl, i) => (
+            <View key={i} style={styles.slot}>
+              <Text style={styles.slotName}>{names[pl.player]}</Text>
+              <Card card={pl.card} />
+            </View>
+          ))
+        ) : (
+          <Text style={styles.muted}>
+            {t('trick.leads', { name: names[pub.currentTrick?.leader ?? player] })}
+          </Text>
+        )}
+      </View>
+
+      <View style={styles.spacer} />
+
+      {/* Your table piles (above) then your hand (below) */}
+      <Text style={styles.handHint}>{t('rumpun.piles')}</Text>
+      <View style={styles.rumpunPiles}>
+        {pub.piles[player].map((pile, i) => (
+          <PileView
+            key={i}
+            pile={pile}
+            legal={pile.up ? isLegal(pile.up) : false}
+            selected={pile.up ? isSel(pile.up) : false}
+            testID="legal-card"
+            onPress={pile.up ? () => selectOne(pile.up as CardType) : undefined}
+          />
+        ))}
+      </View>
+      <View style={styles.handTop}>
+        <Text style={styles.handHint}>{t('rumpun.yourHand')}</Text>
+        <SortToggle />
+      </View>
+      <ScrollView horizontal style={styles.handScroll} contentContainerStyle={styles.hand}>
+        {sortHand(priv.hand, sortMode).map((card, i) => {
+          const legal = isLegal(card);
+          return (
+            <Card
+              key={i}
+              card={card}
+              selected={isSel(card)}
+              disabled={!legal}
+              testID={legal ? 'legal-card' : undefined}
+              onPress={legal ? () => selectOne(card) : undefined}
+            />
+          );
+        })}
+      </ScrollView>
+      <View style={styles.actionRow}>
+        <Button
+          label={t('turn.play')}
+          disabled={!picked}
+          testID="play-submit"
+          onPress={() => picked && apply({ type: 'play', card: picked })}
+        />
+        {batu.settings.undoEnabled && (
+          <Button
+            label={confirmUndo ? t('trick.undoConfirm') : t('trick.undo')}
+            variant={confirmUndo ? 'danger' : 'ghost'}
+            small
+            onPress={() => {
+              if (confirmUndo) {
+                undo();
+                setConfirmUndo(false);
+              } else setConfirmUndo(true);
+            }}
+          />
+        )}
+      </View>
+    </Board>
   );
 }
 
@@ -494,9 +613,7 @@ function CapsaView({ player }: { player: PlayerId }) {
     <Board>
       <View style={styles.infoRow}>
         <Text style={styles.trump}>
-          {pub.currentCombo
-            ? `${t('capsa.currentCombo')}: ${pub.currentCombo.cards.map(cardText).join(' ')}`
-            : t('capsa.freeLead')}
+          {pub.currentCombo ? t('capsa.currentCombo') : t('capsa.freeLead')}
         </Text>
         <Text style={styles.turn}>{t('turn.turn', { name: names[player] })}</Text>
       </View>
@@ -505,13 +622,20 @@ function CapsaView({ player }: { player: PlayerId }) {
           .map((p) => `${names[p as PlayerId]} ${t('capsa.left', { n: pub.counts[p] })}`)
           .join('  ')}
       </Text>
+      <View style={styles.trickArea}>
+        {pub.currentCombo ? (
+          pub.currentCombo.cards.map((c, i) => <Card key={i} card={c} />)
+        ) : (
+          <Text style={styles.muted}>{t('capsa.freeLead')}</Text>
+        )}
+      </View>
       <View style={styles.spacer} />
       <View style={styles.handTop}>
         <Text style={styles.handHint}>{t('capsa.selectHint')}</Text>
         <SortToggle />
       </View>
       <ScrollView horizontal style={styles.handScroll} contentContainerStyle={styles.hand}>
-        {sortHand(priv.hand, sortMode).map((card, i) => (
+        {sortHand(priv.hand, sortMode, true).map((card, i) => (
           <Card
             key={i}
             card={card}
@@ -902,6 +1026,35 @@ const styles = StyleSheet.create({
   amountText: { fontSize: 16, fontWeight: '700', color: theme.text },
   pilesRow: { gap: 2, paddingVertical: 4 },
   pileText: { color: '#cfe3d8', fontSize: 12 },
+  rumpunTable: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 22,
+    flexWrap: 'wrap',
+    paddingVertical: 6,
+  },
+  rumpunPlayer: { alignItems: 'center', gap: 4 },
+  rumpunName: { color: '#cfe3d8', fontSize: 12 },
+  rumpunPiles: { flexDirection: 'row', gap: 12, justifyContent: 'center', paddingVertical: 4 },
+  pileCol: { alignItems: 'center', gap: 3 },
+  pileGone: {
+    width: 44,
+    height: 62,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    borderStyle: 'dashed',
+  },
+  pileDowns: { alignItems: 'center', gap: 2 },
+  miniBack: {
+    width: 40,
+    height: 12,
+    borderRadius: 3,
+    backgroundColor: '#123a5e',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+  },
+  miniBackOverlap: { marginTop: -7 },
   capsaButtons: { flexDirection: 'row', gap: 10, alignItems: 'center', marginTop: 6 },
   sevenBoard: {
     flexDirection: 'row',

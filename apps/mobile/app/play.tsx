@@ -11,7 +11,7 @@ import {
   PentaTallyView,
   Champion,
 } from '../src/components/flow';
-import { ScoreSheet, Standings, Menu } from '../src/components/scores';
+import { ScoreSheet, Standings, Menu, History } from '../src/components/scores';
 import { GameView, BidReveal, NoMorePlays } from '../src/components/games';
 
 export default function PlayScreen() {
@@ -34,6 +34,7 @@ export default function PlayScreen() {
   if (overlay === 'sheet') return <ScoreSheet />;
   if (overlay === 'standings') return <Standings />;
   if (overlay === 'menu') return <Menu />;
+  if (overlay === 'history') return <History />;
 
   // Public interstitials in priority order.
   if (lastTrick) return <TrickResult />;

@@ -35,12 +35,27 @@ export function Card({ card, onPress, disabled, selected, size = 'md', testID }:
 
   if (onPress && !disabled) {
     return (
-      <Pressable onPress={onPress} accessibilityRole="button" testID={testID}>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        testID={testID}
+        // `hovered` is a react-native-web extension not in the RN types.
+        style={(state) => ((state as { hovered?: boolean }).hovered ? styles.hover : null)}
+      >
         {face}
       </Pressable>
     );
   }
   return face;
+}
+
+/** A face-down card back — used for hidden cards (Rumpun piles, hidden hands). */
+export function CardBack({ size = 'md' }: { size?: 'sm' | 'md' }) {
+  return (
+    <View style={[styles.card, size === 'sm' && styles.cardSm, styles.back]}>
+      <View style={styles.backInner} />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -62,6 +77,16 @@ const styles = StyleSheet.create({
     transform: [{ translateY: -8 }],
   },
   dim: { opacity: 0.35 },
+  hover: { transform: [{ translateY: -6 }] },
+  back: { backgroundColor: '#123a5e', borderColor: '#0c2b46', padding: 5 },
+  backInner: {
+    flex: 1,
+    alignSelf: 'stretch',
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: '#1c4f7a',
+  },
   rank: { fontSize: 22, fontWeight: '700' },
   rankSm: { fontSize: 16 },
   suit: { fontSize: 26, marginTop: 2 },

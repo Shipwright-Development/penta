@@ -13,7 +13,7 @@ import { theme } from '../theme';
 import { suitGlyph } from '../format';
 import { engine } from '../engine';
 import { useBatu } from '../batuStore';
-import { Public, H1, Muted } from './ui';
+import { Public, H1, Muted, Panel } from './ui';
 import { Button } from './Button';
 import { Card } from './Card';
 
@@ -31,10 +31,12 @@ export function DealPrompt() {
   const gameId = GAME_ORDER[batu.gameIndex];
   return (
     <Public controls>
-      <H1>{t('deal.next', { game: t(gameNameKey(gameId)), n: batu.roundIndex + 1 })}</H1>
-      <Muted>{t('deal.dealer', { name: names[batu.dealer] })}</Muted>
-      <View style={styles.gap} />
-      <Button label={t('deal.button')} onPress={deal} />
+      <Panel>
+        <H1>{t('deal.next', { game: t(gameNameKey(gameId)), n: batu.roundIndex + 1 })}</H1>
+        <Muted>{t('deal.dealer', { name: names[batu.dealer] })}</Muted>
+        <View style={styles.gap} />
+        <Button label={t('deal.button')} onPress={deal} />
+      </Panel>
     </Public>
   );
 }
@@ -47,16 +49,18 @@ export function Ritual() {
   const deal = batu.lastDeal;
   return (
     <Public>
-      <H1>{t('ritual.title')}</H1>
-      <Muted>{t('ritual.flip')}</Muted>
-      {deal && <Card card={deal.middleCard} />}
-      {deal && (
-        <Text style={styles.big}>
-          {t('ritual.recipient', { name: names[deal.firstRecipient] })}
-        </Text>
-      )}
-      <View style={styles.gap} />
-      <Button label={t('ritual.continue')} onPress={accept} />
+      <Panel>
+        <H1>{t('ritual.title')}</H1>
+        <Muted>{t('ritual.flip')}</Muted>
+        {deal && <Card card={deal.middleCard} />}
+        {deal && (
+          <Text style={styles.big}>
+            {t('ritual.recipient', { name: names[deal.firstRecipient] })}
+          </Text>
+        )}
+        <View style={styles.gap} />
+        <Button label={t('ritual.continue')} onPress={accept} />
+      </Panel>
     </Public>
   );
 }
@@ -67,10 +71,12 @@ export function Handoff({ player }: { player: PlayerId }) {
   const reveal = useBatu((s) => s.reveal);
   return (
     <Public controls>
-      <H1>{t('handoff.pass', { name: names[player] })}</H1>
-      <Muted>{t('handoff.lookAway')}</Muted>
-      <View style={styles.gap} />
-      <Button label={t('handoff.reveal')} onPress={reveal} />
+      <Panel>
+        <H1>{t('handoff.pass', { name: names[player] })}</H1>
+        <Muted>{t('handoff.lookAway')}</Muted>
+        <View style={styles.gap} />
+        <Button label={t('handoff.reveal')} onPress={reveal} />
+      </Panel>
     </Public>
   );
 }

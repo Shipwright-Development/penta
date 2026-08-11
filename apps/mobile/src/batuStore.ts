@@ -21,6 +21,28 @@ export interface SummaryInfo {
   result: RoundResult;
 }
 
+/**
+ * A recent move, for the history panel. Hidden information (secret bids,
+ * passed cards, face-down discards) is summarised, never revealed here.
+ */
+export interface MoveLog {
+  player: PlayerId;
+  gameId: GameId;
+  kind: 'play' | 'pass' | 'pass3' | 'bid' | 'adjust' | 'discard';
+  cards?: Card[];
+  amount?: number;
+}
+
+function logEntry(gameId: GameId, player: PlayerId, move: unknown): MoveLog {
+  const m = move as { type: string; cards?: Card[]; card?: Card; amount?: number };
+  if (m.type === 'bid') return { player, gameId, kind: 'bid' };
+  if (m.type === 'adjust') return { player, gameId, kind: 'adjust', amount: m.amount };
+  if (m.type === 'discard') return { player, gameId, kind: 'discard' };
+  if (m.type === 'pass') return { player, gameId, kind: gameId === 'hearts' ? 'pass3' : 'pass' };
+  const cards = m.cards ?? (m.card ? [m.card] : []);
+  return { player, gameId, kind: 'play', cards };
+}
+
 interface BatuStore {
   batu: BatuState | null;
   names: string[];
@@ -31,8 +53,9 @@ interface BatuStore {
   summaryPending: SummaryInfo | null; // round summary awaiting acknowledgement
   tallyPending: GameId | null; // penta tally awaiting acknowledgement (after round 4)
   selection: Card[]; // multi-card selection (Capsa combo, Hearts pass, Trump bid)
-  overlay: 'none' | 'sheet' | 'standings' | 'menu'; // public overlay on top of play
+  overlay: 'none' | 'sheet' | 'standings' | 'menu' | 'history'; // public overlay on top of play
   sortMode: 'suit' | 'rank'; // how hands are sorted for display
+  history: MoveLog[]; // recent moves, newest last
 
   newBatu: (names: string[], settings: BatuSettings) => void;
   resume: () => boolean;
@@ -91,6 +114,7 @@ export const useBatu = create<BatuStore>((set, get) => ({
   selection: [],
   overlay: 'none',
   sortMode: 'suit',
+  history: [],
 
   newBatu: (names, settings) => {
     const batu = engine.create(names as [string, string, string, string], settings);
@@ -106,6 +130,7 @@ export const useBatu = create<BatuStore>((set, get) => ({
       tallyPending: null,
       selection: [],
       overlay: 'none',
+      history: [],
     });
   },
 
@@ -123,6 +148,7 @@ export const useBatu = create<BatuStore>((set, get) => ({
       tallyPending: null,
       selection: [],
       overlay: 'none',
+      history: [],
     });
     return true;
   },
@@ -150,9 +176,14 @@ export const useBatu = create<BatuStore>((set, get) => ({
     const batu = get().batu;
     if (!batu) return;
     const player = engine.pendingPlayers(batu)[0];
+    const gameId = batu.active?.gameId;
     const trick = captureTrick(batu, player, move);
     const next = engine.applyMove(batu, player, move);
     saveBatu(next);
+
+    const history = gameId
+      ? [...get().history, logEntry(gameId, player, move)].slice(-12)
+      : get().history;
 
     let summaryPending = get().summaryPending;
     let tallyPending = get().tallyPending;
@@ -174,6 +205,7 @@ export const useBatu = create<BatuStore>((set, get) => ({
       lastTrick: trick,
       summaryPending,
       tallyPending,
+      history,
     });
   },
 

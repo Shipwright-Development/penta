@@ -17,6 +17,12 @@ export function Header({ showControls = true }: { showControls?: boolean }) {
         {showControls && (
           <>
             <Button
+              label={t('common.moves')}
+              variant="ghost"
+              small
+              onPress={() => setOverlay('history')}
+            />
+            <Button
               label={t('common.scores')}
               variant="ghost"
               small
@@ -63,6 +69,11 @@ export function Muted({ children }: { children: ReactNode }) {
   return <Text style={styles.muted}>{children}</Text>;
 }
 
+/** A centred content card — the consistent container for interstitial screens. */
+export function Panel({ children }: { children: ReactNode }) {
+  return <View style={styles.panel}>{children}</View>;
+}
+
 const styles = StyleSheet.create({
   publicRoot: { flex: 1, backgroundColor: theme.felt },
   publicCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, padding: 24 },
@@ -77,4 +88,13 @@ const styles = StyleSheet.create({
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   h1: { fontSize: 30, fontWeight: '800', color: '#fff', textAlign: 'center' },
   muted: { fontSize: 15, color: '#d7ebe0', textAlign: 'center' },
+  panel: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 16,
+    paddingVertical: 28,
+    paddingHorizontal: 32,
+    gap: 14,
+    alignItems: 'center',
+    maxWidth: 560,
+  },
 });
