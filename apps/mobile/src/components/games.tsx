@@ -691,7 +691,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 4,
   },
-  hand: { flexDirection: 'row', gap: 8, paddingVertical: 8, alignItems: 'flex-end' },
+  hand: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexGrow: 1,
+  },
   shoutRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 4 },
   shoutPill: {
     paddingVertical: 6,
