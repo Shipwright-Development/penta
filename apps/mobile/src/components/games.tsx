@@ -546,27 +546,28 @@ function CapsaView({ player }: { player: PlayerId }) {
 
 const SEVEN_RANKS: Rank[] = [2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K'];
 
-/** The actual cards on a suit's line, low → high, reconstructed from its span. */
-function lineCards(suit: Suit, line: SevenLine): CardType[] {
-  if (!line.opened || line.lowNonAce === null || line.highNonAce === null) return [];
-  const lo = SEVEN_RANKS.indexOf(line.lowNonAce);
+const SEVEN_IDX = 5; // index of the 7, the anchor
+
+/** The cards above and below the 7 on a suit's line (each ordered outward). */
+function suitRun(suit: Suit, line: SevenLine): { upper: CardType[]; lower: CardType[] } | null {
+  if (!line.opened || line.lowNonAce === null || line.highNonAce === null) return null;
   const hi = SEVEN_RANKS.indexOf(line.highNonAce);
-  const cards: CardType[] = [];
-  if (line.aceLow) cards.push({ suit, rank: 'A' });
-  for (let i = lo; i <= hi; i++) cards.push({ suit, rank: SEVEN_RANKS[i] });
-  if (line.aceHigh) cards.push({ suit, rank: 'A' });
-  return cards;
+  const lo = SEVEN_RANKS.indexOf(line.lowNonAce);
+  const upper: CardType[] = []; // highest → 8 (top down to just above the 7)
+  const lower: CardType[] = []; // 6 → lowest (just below the 7 downward)
+  if (line.aceHigh) upper.push({ suit, rank: 'A' });
+  for (let r = hi; r > SEVEN_IDX; r--) upper.push({ suit, rank: SEVEN_RANKS[r] });
+  for (let r = SEVEN_IDX - 1; r >= lo; r--) lower.push({ suit, rank: SEVEN_RANKS[r] });
+  if (line.aceLow) lower.push({ suit, rank: 'A' });
+  return { upper, lower };
 }
 
-/** A small board card showing a corner index, overlapped into a fan. */
-function LineCard({ card, overlap }: { card: CardType; overlap: boolean }) {
+/** A small board card showing a corner index; stacked vertically into a column. */
+function VCard({ card, first, anchor }: { card: CardType; first: boolean; anchor?: boolean }) {
   const color = isRed(card.suit) ? theme.red : theme.ink;
-  const anchor = card.rank === 7; // the 7 that opened the line
   return (
-    <View
-      style={[styles.lineCard, overlap && styles.lineCardOverlap, anchor && styles.lineCardAnchor]}
-    >
-      <Text style={[styles.lineCardIndex, { color }]}>
+    <View style={[styles.vcard, !first && styles.vcardOverlap, anchor && styles.vcardAnchor]}>
+      <Text style={[styles.vindex, { color }]}>
         {card.rank}
         {suitGlyph(card.suit)}
       </Text>
@@ -627,19 +628,26 @@ function SevenView({ player }: { player: PlayerId }) {
       </View>
       <View style={styles.sevenBoard}>
         {suits.map((suit) => {
-          const cards = lineCards(suit, pub.lines[suit]);
+          const run = suitRun(suit, pub.lines[suit]);
           return (
-            <View key={suit} style={styles.sevenRow}>
-              <Text style={styles.sevenSuit}>{suitGlyph(suit)}</Text>
-              {cards.length === 0 ? (
-                <Text style={styles.sevenEmpty}>—</Text>
+            <View key={suit} style={styles.sevenCol}>
+              <View style={styles.upperZone}>
+                {run?.upper.map((c, i) => (
+                  <VCard key={i} card={c} first={i === 0} />
+                ))}
+              </View>
+              {run ? (
+                <VCard card={{ suit, rank: 7 }} first anchor />
               ) : (
-                <View style={styles.fan}>
-                  {cards.map((c, i) => (
-                    <LineCard key={i} card={c} overlap={i > 0} />
-                  ))}
+                <View style={[styles.vcard, styles.vcardEmpty]}>
+                  <Text style={styles.vindexEmpty}>{suitGlyph(suit)}</Text>
                 </View>
               )}
+              <View style={styles.lowerZone}>
+                {run?.lower.map((c, i) => (
+                  <VCard key={i} card={c} first={i === 0} />
+                ))}
+              </View>
             </View>
           );
         })}
@@ -823,14 +831,19 @@ const styles = StyleSheet.create({
   pilesRow: { gap: 2, paddingVertical: 4 },
   pileText: { color: '#cfe3d8', fontSize: 12 },
   capsaButtons: { flexDirection: 'row', gap: 10, alignItems: 'center', marginTop: 6 },
-  sevenBoard: { gap: 8, paddingVertical: 12, alignSelf: 'center' },
-  sevenRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 58 },
-  sevenSuit: { color: '#fff', fontSize: 20, fontWeight: '700', width: 24 },
-  sevenEmpty: { color: '#9fb8ab', fontSize: 18 },
-  fan: { flexDirection: 'row', alignItems: 'center' },
-  lineCard: {
-    width: 42,
-    height: 56,
+  sevenBoard: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 26,
+    paddingTop: 8,
+    alignSelf: 'center',
+  },
+  sevenCol: { alignItems: 'center' },
+  upperZone: { height: 60 + 6 * 18, justifyContent: 'flex-end', alignItems: 'center' },
+  lowerZone: { alignItems: 'center' },
+  vcard: {
+    width: 44,
+    height: 60,
     borderRadius: 6,
     backgroundColor: theme.cardBg,
     borderWidth: 1,
@@ -838,9 +851,15 @@ const styles = StyleSheet.create({
     paddingTop: 3,
     paddingLeft: 4,
   },
-  lineCardOverlap: { marginLeft: -24 },
-  lineCardAnchor: { borderColor: theme.accent, borderWidth: 2 },
-  lineCardIndex: { fontSize: 14, fontWeight: '800' },
+  vcardOverlap: { marginTop: -42 }, // show an 18px index strip
+  vcardAnchor: { borderColor: theme.accent, borderWidth: 2 },
+  vcardEmpty: {
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  vindex: { fontSize: 14, fontWeight: '800' },
+  vindexEmpty: { color: '#cfe3d8', fontSize: 18, fontWeight: '700' },
   acePrompt: { marginTop: 10, gap: 8, alignItems: 'center' },
   aceButtons: { flexDirection: 'row', gap: 10 },
 });
