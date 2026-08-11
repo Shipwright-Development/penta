@@ -108,8 +108,8 @@ const STRINGS = {
   'hearts.passTo': { en: 'They go to {name}', id: 'Diberikan ke {name}' },
   'hearts.broken': { en: 'Hearts broken', id: 'Hati sudah pecah' },
   'hearts.taken': { en: 'Penalty taken', id: 'Penalti diambil' },
-  'hearts.wonLabel': { en: 'Penalties you have taken', id: 'Penalti yang kamu ambil' },
-  'hearts.wonNone': { en: 'none yet', id: 'belum ada' },
+  'hearts.penalties': { en: 'Penalties taken', id: 'Penalti diambil' },
+  'hearts.wonNone': { en: 'none', id: 'belum ada' },
 
   'capsa.currentCombo': { en: 'To beat', id: 'Yang dikalahkan' },
   'capsa.freeLead': { en: 'Lead anything', id: 'Pimpin bebas' },
@@ -121,6 +121,7 @@ const STRINGS = {
   'capsa.group': { en: 'Group', id: 'Kelompokkan' },
   'capsa.groupsLabel': { en: 'Your groups', id: 'Kelompokmu' },
   'capsa.pass': { en: 'Pass', id: 'Lewat' },
+  'capsa.passed': { en: 'passed', id: 'sudah lewat' },
   'capsa.left': { en: '{n} left', id: 'sisa {n}' },
   'capsa.illegal': { en: 'Not a legal play', id: 'Bukan permainan sah' },
 
@@ -170,6 +171,7 @@ const STRINGS = {
 
   'sheet.title': { en: 'Score sheet', id: 'Lembar skor' },
   'sheet.total': { en: 'Total', id: 'Total' },
+  'sheet.totalPenta': { en: 'Total penta', id: 'Total penta' },
   'sheet.close': { en: 'Close', id: 'Tutup' },
   'sheet.round': { en: 'R{n}', id: 'R{n}' },
 

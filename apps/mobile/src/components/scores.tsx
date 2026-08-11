@@ -38,8 +38,36 @@ export function ScoreSheet() {
         {GAME_ORDER.map((gid) => (
           <GameBlock key={gid} gameId={gid} names={names} batu={batu} />
         ))}
+        <TotalPentaBlock names={names} batu={batu} />
       </View>
     </Board>
+  );
+}
+
+/** Grand total: penta summed across every game tallied so far (round-4 games). */
+function TotalPentaBlock({ names, batu }: { names: string[]; batu: BatuState }) {
+  const t = useT();
+  const standings = engine.standings(batu);
+  return (
+    <View style={[styles.block, styles.totalBlock]}>
+      <Text style={styles.blockTitle}>{t('sheet.totalPenta')}</Text>
+      <View style={styles.trow}>
+        <Text style={styles.cLabel} />
+        {PLAYER_IDS.map((p) => (
+          <Text key={p} style={styles.cCell}>
+            {names[p]}
+          </Text>
+        ))}
+      </View>
+      <View style={styles.trow}>
+        <Text style={[styles.cLabel, styles.pentaLabel]}>{t('tally.penta')}</Text>
+        {PLAYER_IDS.map((p) => (
+          <Text key={p} style={[styles.cCell, styles.pentaCell]}>
+            {roundTo2dp(standings[p])}
+          </Text>
+        ))}
+      </View>
+    </View>
   );
 }
 
@@ -230,6 +258,7 @@ const styles = StyleSheet.create({
     flexBasis: 340,
     maxWidth: 560,
   },
+  totalBlock: { borderWidth: 1, borderColor: theme.accent },
   blockTitle: { color: theme.accent, fontWeight: '800', fontSize: 20, marginBottom: 10 },
   trow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },
   cLabel: { width: 56, color: '#cfe3d8', fontSize: 16 },

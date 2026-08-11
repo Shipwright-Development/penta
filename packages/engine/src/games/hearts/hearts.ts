@@ -236,9 +236,12 @@ export function createHeartsModule(): GameModule<HeartsState, HeartsMove> {
         heartsBroken: state.heartsBroken,
         trickNumber: state.trickNumber,
         currentTrick: state.currentTrick,
+        // Penalty cards each player has taken (hearts + Q♠). Taken tricks are
+        // public, so the actual cards are shown, not just a count.
         taken: PLAYER_IDS.map((p) => ({
           hearts: heartsHeld(state.taken[p]),
           queen: hasQueen(state.taken[p]),
+          cards: state.taken[p].filter(isPenalty),
         })),
       };
     },
@@ -250,9 +253,6 @@ export function createHeartsModule(): GameModule<HeartsState, HeartsMove> {
         myPass: state.passSelections[player] ?? null,
         // Who this player passes their three cards to (null in the no-pass round).
         passTo: offset === null ? null : (((player + offset) % 4) as PlayerId),
-        // Penalty cards this player has already taken in tricks (hearts + Q♠).
-        // Taken tricks are public, so this is not hidden information.
-        won: state.taken[player].filter(isPenalty),
       };
     },
 

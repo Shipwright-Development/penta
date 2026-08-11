@@ -48,7 +48,7 @@ interface HeartsPub {
   heartsBroken: boolean;
   trickNumber: number;
   currentTrick: TrickPub | null;
-  taken: { hearts: number; queen: boolean }[];
+  taken: { hearts: number; queen: boolean; cards: CardType[] }[];
 }
 interface RumpunPub {
   trumpSuit: Suit;
@@ -468,7 +468,6 @@ function HeartsView({ player }: { player: PlayerId }) {
   const priv = activePrivateView(batu, player) as {
     hand: CardType[];
     passTo: PlayerId | null;
-    won: CardType[];
   };
 
   if (pub.phase === 'passing') {
@@ -524,13 +523,22 @@ function HeartsView({ player }: { player: PlayerId }) {
       handCards={priv.hand}
       legalCards={legalCards}
       extras={
-        <View style={styles.wonRow}>
-          <Text style={styles.handHint}>{t('hearts.wonLabel')}:</Text>
-          {priv.won.length === 0 ? (
-            <Text style={styles.muted}>{t('hearts.wonNone')}</Text>
-          ) : (
-            sortHand(priv.won, 'suit').map((c, i) => <Card key={i} card={c} size="sm" />)
-          )}
+        <View style={styles.penPanel}>
+          <Text style={styles.handHint}>{t('hearts.penalties')}</Text>
+          <View style={styles.penGrid}>
+            {PLAYER_IDS.map((p) => (
+              <View key={p} style={styles.penRow}>
+                <Text style={styles.penName}>{names[p]}</Text>
+                {pub.taken[p].cards.length === 0 ? (
+                  <Text style={styles.muted}>{t('hearts.wonNone')}</Text>
+                ) : (
+                  sortHand(pub.taken[p].cards, 'suit').map((c, i) => (
+                    <Card key={i} card={c} size="sm" />
+                  ))
+                )}
+              </View>
+            ))}
+          </View>
         </View>
       }
     />
@@ -730,26 +738,35 @@ function CapsaView({ player }: { player: PlayerId }) {
   const ungrouped = priv.hand.filter((c) => !inGroup(c));
   const canGroup = selection.length > 0 && selection.every((c) => !inGroup(c));
 
+  const renderSeat = (p: PlayerId) => (
+    <View style={[styles.seat, p === player && styles.seatActive]}>
+      <Text style={styles.seatName}>{names[p]}</Text>
+      <Text style={styles.seatCount}>{t('capsa.left', { n: pub.counts[p] })}</Text>
+      {pub.passed.includes(p) && <Text style={styles.seatPassed}>{t('capsa.passed')}</Text>}
+    </View>
+  );
+
   return (
     <Board>
-      <View style={styles.infoRow}>
-        <Text style={styles.trump}>
-          {pub.currentCombo ? t('capsa.currentCombo') : t('capsa.freeLead')}
-        </Text>
-        <Text style={styles.turn}>{t('turn.turn', { name: names[player] })}</Text>
-      </View>
-      <Text style={styles.scoreStrip}>
-        {[0, 1, 2, 3]
-          .map((p) => `${names[p as PlayerId]} ${t('capsa.left', { n: pub.counts[p] })}`)
-          .join('  ')}
-      </Text>
-      <View style={styles.trickArea}>
-        {pub.currentCombo ? (
-          pub.currentCombo.cards.map((c, i) => <Card key={i} card={c} />)
-        ) : (
-          <Text style={styles.muted}>{t('capsa.freeLead')}</Text>
-        )}
-      </View>
+      <TopBar
+        info={pub.currentCombo ? t('capsa.currentCombo') : t('capsa.freeLead')}
+        turn={t('turn.turn', { name: names[player] })}
+      />
+      <SeatFrame
+        viewer={player}
+        center={
+          pub.currentCombo ? (
+            <View style={styles.trickArea}>
+              {pub.currentCombo.cards.map((c, i) => (
+                <Card key={i} card={c} size="sm" />
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.muted}>{t('capsa.freeLead')}</Text>
+          )
+        }
+        renderSeat={renderSeat}
+      />
       <View style={styles.spacer} />
       {groups.length > 0 && (
         <View style={styles.groupsWrap}>
@@ -942,10 +959,7 @@ function SevenView({ player }: { player: PlayerId }) {
 
   return (
     <Board>
-      <View style={styles.infoRow}>
-        <Text style={styles.trump}>{t('seven.aces', { conv })}</Text>
-        <Text style={styles.turn}>{t('turn.turn', { name: names[player] })}</Text>
-      </View>
+      <TopBar info={t('seven.aces', { conv })} turn={t('turn.turn', { name: names[player] })} />
       <View style={styles.sevenBoard}>
         {suits.map((suit) => {
           const line = pub.lines[suit];
@@ -1128,6 +1142,12 @@ const styles = StyleSheet.create({
   },
   seatActive: { borderColor: theme.accent, backgroundColor: 'rgba(240,199,94,0.12)' },
   seatName: { color: '#e6f2ea', fontSize: 13, fontWeight: '700' },
+  seatCount: { color: '#cfe3d8', fontSize: 12 },
+  seatPassed: { color: theme.accent, fontSize: 11, fontWeight: '700' },
+  penPanel: { alignItems: 'center', gap: 4, paddingVertical: 4 },
+  penGrid: { flexDirection: 'row', gap: 16, flexWrap: 'wrap', justifyContent: 'center' },
+  penRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  penName: { color: '#e6f2ea', fontSize: 13, fontWeight: '700', marginRight: 2 },
   seatEmpty: {
     width: 44,
     height: 62,
