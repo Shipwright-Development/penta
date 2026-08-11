@@ -244,7 +244,16 @@ export function createHeartsModule(): GameModule<HeartsState, HeartsMove> {
     },
 
     privateView(state, player) {
-      return { hand: state.hands[player], myPass: state.passSelections[player] ?? null };
+      const offset = passOffset(state.roundIndex);
+      return {
+        hand: state.hands[player],
+        myPass: state.passSelections[player] ?? null,
+        // Who this player passes their three cards to (null in the no-pass round).
+        passTo: offset === null ? null : (((player + offset) % 4) as PlayerId),
+        // Penalty cards this player has already taken in tricks (hearts + Q♠).
+        // Taken tricks are public, so this is not hidden information.
+        won: state.taken[player].filter(isPenalty),
+      };
     },
 
     serialize(state): unknown {

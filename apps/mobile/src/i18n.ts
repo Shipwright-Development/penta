@@ -33,7 +33,7 @@ const STRINGS = {
   'game.seven': { en: 'Seven', id: 'Seven' },
   'game.hearts': { en: 'Hearts', id: 'Hearts' },
   'game.rumpun': { en: 'Rumpun', id: 'Rumpun' },
-  'game.capsa': { en: 'Capsa Banting', id: 'Capsa Banting' },
+  'game.capsa': { en: 'Big 2', id: 'Capsa Banting' },
 
   'deal.next': { en: 'Next: {game} · Round {n}', id: 'Berikutnya: {game} · Ronde {n}' },
   'deal.dealer': { en: '{name} deals', id: '{name} membagi' },
@@ -44,7 +44,8 @@ const STRINGS = {
   'ritual.recipient': { en: '{name} receives the first card', id: '{name} menerima kartu pertama' },
   'ritual.continue': { en: 'Continue', id: 'Lanjut' },
 
-  'handoff.pass': { en: 'Pass to {name}', id: 'Berikan ke {name}' },
+  'handoff.turn': { en: "{name}'s turn", id: 'Giliran {name}' },
+  'handoff.pass': { en: 'Pass the device to {name}', id: 'Berikan perangkat ke {name}' },
   'handoff.lookAway': { en: 'Everyone else, look away', id: 'Yang lain, jangan melihat' },
   'handoff.reveal': { en: 'Tap to reveal', id: 'Ketuk untuk melihat' },
 
@@ -86,6 +87,7 @@ const STRINGS = {
     en: 'Pick a non-zero amount applied to all four bids',
     id: 'Pilih jumlah bukan nol untuk semua tawaran',
   },
+  'adjust.bidsLabel': { en: 'Bids (total 13)', id: 'Tawaran (total 13)' },
 
   'trick.trumpIs': { en: 'Trump {suit}', id: 'Truf {suit}' },
   'trick.nt': { en: 'No-Trump', id: 'Tanpa Truf' },
@@ -103,8 +105,11 @@ const STRINGS = {
   'hearts.across': { en: 'across', id: 'ke seberang' },
   'hearts.selectHint': { en: 'Select exactly 3 cards', id: 'Pilih tepat 3 kartu' },
   'hearts.confirm': { en: 'Pass these 3', id: 'Berikan 3 ini' },
+  'hearts.passTo': { en: 'They go to {name}', id: 'Diberikan ke {name}' },
   'hearts.broken': { en: 'Hearts broken', id: 'Hati sudah pecah' },
   'hearts.taken': { en: 'Penalty taken', id: 'Penalti diambil' },
+  'hearts.wonLabel': { en: 'Penalties you have taken', id: 'Penalti yang kamu ambil' },
+  'hearts.wonNone': { en: 'none yet', id: 'belum ada' },
 
   'capsa.currentCombo': { en: 'To beat', id: 'Yang dikalahkan' },
   'capsa.freeLead': { en: 'Lead anything', id: 'Pimpin bebas' },

@@ -111,6 +111,84 @@ export function BidReveal() {
 }
 
 // ---------------------------------------------------------------------------
+// Seating: a square table — the viewer at the bottom, others clockwise
+// ---------------------------------------------------------------------------
+
+type SeatPos = 'top' | 'right' | 'bottom' | 'left';
+
+/** The play a given seat has made in the current trick, if any. */
+function playOf(trick: TrickPub | null, p: PlayerId) {
+  return trick?.plays.find((pl) => pl.player === p) ?? null;
+}
+
+/** Left-aligned game info, with the player whose turn it is centred on top. */
+function TopBar({ info, turn }: { info: string; turn: string }) {
+  return (
+    <View style={styles.topBar}>
+      <Text style={styles.topSide}>{info}</Text>
+      <Text style={styles.topTurn}>{turn}</Text>
+      <Text style={styles.topSide} />
+    </View>
+  );
+}
+
+/**
+ * Four seats around a square: the viewer sits at the bottom and the other
+ * three fall clockwise (right, across, left). Every trick game renders through
+ * this so the seating is consistent table-to-table.
+ */
+function SeatFrame({
+  viewer,
+  center,
+  renderSeat,
+}: {
+  viewer: PlayerId;
+  center: React.ReactNode;
+  renderSeat: (p: PlayerId, pos: SeatPos) => React.ReactNode;
+}) {
+  const right = ((viewer + 1) % 4) as PlayerId;
+  const across = ((viewer + 2) % 4) as PlayerId;
+  const left = ((viewer + 3) % 4) as PlayerId;
+  return (
+    <View style={styles.seatFrame}>
+      <View style={styles.seatRowEnd}>{renderSeat(across, 'top')}</View>
+      <View style={styles.seatRowMid}>
+        <View style={styles.seatSide}>{renderSeat(left, 'left')}</View>
+        <View style={styles.seatCenterCol}>{center}</View>
+        <View style={styles.seatSide}>{renderSeat(right, 'right')}</View>
+      </View>
+      <View style={styles.seatRowEnd}>{renderSeat(viewer, 'bottom')}</View>
+    </View>
+  );
+}
+
+/** A seat showing the player's name and the card they played this trick. */
+function TrickSeat({
+  name,
+  play,
+  isTurn,
+}: {
+  name: string;
+  play: { card: CardType; faceDown?: boolean } | null;
+  isTurn?: boolean;
+}) {
+  return (
+    <View style={[styles.seat, isTurn && styles.seatActive]}>
+      <Text style={styles.seatName}>{name}</Text>
+      {play ? (
+        play.faceDown ? (
+          <CardBack size="sm" />
+        ) : (
+          <Card card={play.card} size="sm" />
+        )
+      ) : (
+        <View style={styles.seatEmpty} />
+      )}
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Shared trick board (Trump / Hearts / Rumpun play)
 // ---------------------------------------------------------------------------
 
@@ -136,26 +214,23 @@ function TrickBoard(props: {
   const sorted = sortHand(props.handCards, sortMode);
   const picked = selection[0];
 
+  const trick = props.currentTrick;
   return (
     <Board>
-      <View style={styles.infoRow}>
-        <Text style={styles.trump}>{props.info}</Text>
-        <Text style={styles.turn}>{props.turn}</Text>
-      </View>
-      <View style={styles.trickArea}>
-        {props.currentTrick && props.currentTrick.plays.length > 0 ? (
-          props.currentTrick.plays.map((p, i) => (
-            <View key={i} style={styles.slot}>
-              <Text style={styles.slotName}>{names[p.player]}</Text>
-              {p.faceDown ? <CardBack /> : <Card card={p.card} />}
-            </View>
-          ))
-        ) : (
-          <Text style={styles.muted}>
-            {t('trick.leads', { name: names[props.currentTrick?.leader ?? props.player] })}
-          </Text>
+      <TopBar info={props.info} turn={props.turn} />
+      <SeatFrame
+        viewer={props.player}
+        center={
+          trick && trick.plays.length > 0 ? null : (
+            <Text style={styles.muted}>
+              {t('trick.leads', { name: names[trick?.leader ?? props.player] })}
+            </Text>
+          )
+        }
+        renderSeat={(p) => (
+          <TrickSeat name={names[p]} play={playOf(trick, p)} isTurn={p === props.player} />
         )}
-      </View>
+      />
       {props.extras}
       <View style={styles.spacer} />
       <View style={styles.handTop}>
@@ -319,21 +394,33 @@ function TrumpView({ player }: { player: PlayerId }) {
 
   if (pub.phase === 'adjustment') {
     const amounts = moves.flatMap((m) => (m.type === 'adjust' ? [m.amount] : []));
+    const bids = pub.finalBids;
     return (
       <Board>
         <Text style={styles.h1}>{t('adjust.title', { name: names[player] })}</Text>
-        <Text style={styles.muted}>{t('adjust.hint')}</Text>
-        <View style={styles.amounts}>
-          {amounts.map((amount) => (
-            <Pressable
-              key={amount}
-              testID="adjust-amount"
-              style={styles.amount}
-              onPress={() => apply({ type: 'adjust', amount })}
-            >
-              <Text style={styles.amountText}>{amount > 0 ? `+${amount}` : amount}</Text>
-            </Pressable>
-          ))}
+        <View style={styles.adjustCenter}>
+          <Text style={styles.handHint}>{t('adjust.bidsLabel')}</Text>
+          <View style={styles.bidsRow}>
+            {PLAYER_IDS.map((p) => (
+              <View key={p} style={styles.bidChip}>
+                <Text style={styles.bidChipName}>{names[p]}</Text>
+                <Text style={styles.bidChipVal}>{bids?.[p] ?? 0}</Text>
+              </View>
+            ))}
+          </View>
+          <Text style={styles.muted}>{t('adjust.hint')}</Text>
+          <View style={styles.amounts}>
+            {amounts.map((amount) => (
+              <Pressable
+                key={amount}
+                testID="adjust-amount"
+                style={styles.amount}
+                onPress={() => apply({ type: 'adjust', amount })}
+              >
+                <Text style={styles.amountText}>{amount > 0 ? `+${amount}` : amount}</Text>
+              </Pressable>
+            ))}
+          </View>
         </View>
       </Board>
     );
@@ -378,7 +465,11 @@ function HeartsView({ player }: { player: PlayerId }) {
   const selection = useBatu((s) => s.selection);
   const toggle = useBatu((s) => s.toggleSelect);
   const sortMode = useBatu((s) => s.sortMode);
-  const priv = activePrivateView(batu, player) as { hand: CardType[] };
+  const priv = activePrivateView(batu, player) as {
+    hand: CardType[];
+    passTo: PlayerId | null;
+    won: CardType[];
+  };
 
   if (pub.phase === 'passing') {
     const dir =
@@ -394,6 +485,9 @@ function HeartsView({ player }: { player: PlayerId }) {
           <Text style={styles.h1}>{t('hearts.pass', { dir })}</Text>
           <SortToggle />
         </View>
+        {priv.passTo !== null && (
+          <Text style={styles.big}>{t('hearts.passTo', { name: names[priv.passTo] })}</Text>
+        )}
         <Text style={styles.muted}>{t('hearts.selectHint')}</Text>
         <View style={styles.spacer} />
         <ScrollView horizontal style={styles.handScroll} contentContainerStyle={styles.hand}>
@@ -429,6 +523,16 @@ function HeartsView({ player }: { player: PlayerId }) {
       currentTrick={pub.currentTrick}
       handCards={priv.hand}
       legalCards={legalCards}
+      extras={
+        <View style={styles.wonRow}>
+          <Text style={styles.handHint}>{t('hearts.wonLabel')}:</Text>
+          {priv.won.length === 0 ? (
+            <Text style={styles.muted}>{t('hearts.wonNone')}</Text>
+          ) : (
+            sortHand(priv.won, 'suit').map((c, i) => <Card key={i} card={c} size="sm" />)
+          )}
+        </View>
+      }
     />
   );
 }
@@ -490,61 +594,64 @@ function RumpunView({ player }: { player: PlayerId }) {
   const isLegal = (c: CardType) => legalCards.some((x) => sameCard(x, c));
   const isSel = (c: CardType) => selection.some((x) => sameCard(x, c));
   const picked = selection[0];
-  const opponents = PLAYER_IDS.filter((p) => p !== player);
+
+  // Each seat shows that player's table piles; only the viewer's pile tops are
+  // interactive. The trick in progress sits in the centre of the square.
+  const renderSeat = (p: PlayerId) => {
+    const isMe = p === player;
+    const piles = pub.piles[p];
+    return (
+      <View style={styles.seat}>
+        <Text style={styles.seatName}>{names[p]}</Text>
+        <View style={styles.rumpunPiles}>
+          {piles.length === 0 ? (
+            <View style={styles.pileGone} />
+          ) : (
+            piles.map((pile, i) => (
+              <PileView
+                key={i}
+                pile={pile}
+                legal={isMe && pile.up ? isLegal(pile.up) : undefined}
+                selected={isMe && pile.up ? isSel(pile.up) : undefined}
+                testID={isMe ? 'legal-card' : undefined}
+                onPress={isMe && pile.up ? () => selectOne(pile.up as CardType) : undefined}
+              />
+            ))
+          )}
+        </View>
+      </View>
+    );
+  };
 
   return (
     <Board>
-      <View style={styles.infoRow}>
-        <Text style={styles.trump}>{t('rumpun.trumpIs', { suit: suitGlyph(pub.trumpSuit) })}</Text>
-        <Text style={styles.turn}>{t('turn.turn', { name: names[player] })}</Text>
-      </View>
-
-      {/* Opponents' table piles */}
-      <View style={styles.rumpunTable}>
-        {opponents.map((p) => (
-          <View key={p} style={styles.rumpunPlayer}>
-            <Text style={styles.rumpunName}>{names[p]}</Text>
-            <View style={styles.rumpunPiles}>
-              {pub.piles[p].map((pile, i) => (
-                <PileView key={i} pile={pile} />
+      <TopBar
+        info={t('rumpun.trumpIs', { suit: suitGlyph(pub.trumpSuit) })}
+        turn={t('turn.turn', { name: names[player] })}
+      />
+      <SeatFrame
+        viewer={player}
+        center={
+          pub.currentTrick && pub.currentTrick.plays.length > 0 ? (
+            <View style={styles.trickArea}>
+              {pub.currentTrick.plays.map((pl, i) => (
+                <View key={i} style={styles.slot}>
+                  <Text style={styles.slotName}>{names[pl.player]}</Text>
+                  {pl.faceDown ? <CardBack size="sm" /> : <Card card={pl.card} size="sm" />}
+                </View>
               ))}
             </View>
-          </View>
-        ))}
-      </View>
-
-      {/* Trick in progress */}
-      <View style={styles.trickArea}>
-        {pub.currentTrick && pub.currentTrick.plays.length > 0 ? (
-          pub.currentTrick.plays.map((pl, i) => (
-            <View key={i} style={styles.slot}>
-              <Text style={styles.slotName}>{names[pl.player]}</Text>
-              {pl.faceDown ? <CardBack /> : <Card card={pl.card} />}
-            </View>
-          ))
-        ) : (
-          <Text style={styles.muted}>
-            {t('trick.leads', { name: names[pub.currentTrick?.leader ?? player] })}
-          </Text>
-        )}
-      </View>
+          ) : (
+            <Text style={styles.muted}>
+              {t('trick.leads', { name: names[pub.currentTrick?.leader ?? player] })}
+            </Text>
+          )
+        }
+        renderSeat={renderSeat}
+      />
 
       <View style={styles.spacer} />
 
-      {/* Your table piles (above) then your hand (below) */}
-      <Text style={styles.handHint}>{t('rumpun.piles')}</Text>
-      <View style={styles.rumpunPiles}>
-        {pub.piles[player].map((pile, i) => (
-          <PileView
-            key={i}
-            pile={pile}
-            legal={pile.up ? isLegal(pile.up) : false}
-            selected={pile.up ? isSel(pile.up) : false}
-            testID="legal-card"
-            onPress={pile.up ? () => selectOne(pile.up as CardType) : undefined}
-          />
-        ))}
-      </View>
       <View style={styles.handTop}>
         <Text style={styles.handHint}>{t('rumpun.yourHand')}</Text>
         <SortToggle />
@@ -998,6 +1105,57 @@ const styles = StyleSheet.create({
   },
   slot: { alignItems: 'center', gap: 4 },
   slotName: { color: '#e6f2ea', fontSize: 13 },
+  topBar: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },
+  topSide: { flex: 1, color: theme.accent, fontSize: 15, fontWeight: '700' },
+  topTurn: { flex: 2, textAlign: 'center', color: '#fff', fontSize: 18, fontWeight: '800' },
+  seatFrame: { alignSelf: 'center', width: '100%', maxWidth: 560, gap: 8, paddingVertical: 6 },
+  seatRowEnd: { alignItems: 'center' },
+  seatRowMid: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 120,
+  },
+  seatSide: { flex: 1, alignItems: 'center' },
+  seatCenterCol: { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 100 },
+  seat: {
+    alignItems: 'center',
+    gap: 4,
+    padding: 6,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  seatActive: { borderColor: theme.accent, backgroundColor: 'rgba(240,199,94,0.12)' },
+  seatName: { color: '#e6f2ea', fontSize: 13, fontWeight: '700' },
+  seatEmpty: {
+    width: 44,
+    height: 62,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    borderStyle: 'dashed',
+  },
+  adjustCenter: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', gap: 14 },
+  bidsRow: { flexDirection: 'row', gap: 16, flexWrap: 'wrap', justifyContent: 'center' },
+  bidChip: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    gap: 2,
+  },
+  bidChipName: { color: '#e6f2ea', fontSize: 14 },
+  bidChipVal: { color: theme.accent, fontSize: 24, fontWeight: '800' },
+  wonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    paddingVertical: 4,
+  },
   scoreStrip: { color: '#fff', fontSize: 13, paddingVertical: 4 },
   handHint: { color: '#e6f2ea', fontSize: 14, marginTop: 4 },
   handTop: {
@@ -1071,17 +1229,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   amountText: { fontSize: 16, fontWeight: '700', color: theme.text },
-  pilesRow: { gap: 2, paddingVertical: 4 },
-  pileText: { color: '#cfe3d8', fontSize: 12 },
-  rumpunTable: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 22,
-    flexWrap: 'wrap',
-    paddingVertical: 6,
-  },
-  rumpunPlayer: { alignItems: 'center', gap: 4 },
-  rumpunName: { color: '#cfe3d8', fontSize: 12 },
   rumpunPiles: { flexDirection: 'row', gap: 12, justifyContent: 'center', paddingVertical: 4 },
   pileCol: { alignItems: 'center', gap: 3 },
   pileGone: {

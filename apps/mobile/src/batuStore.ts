@@ -173,6 +173,8 @@ export const useBatu = create<BatuStore>((set, get) => ({
       selection: [],
       lastTrick: null,
       capsaGroups: { 0: [], 1: [], 2: [], 3: [] },
+      // Big 2 (Capsa) reads best sorted by rank; the trick games default to suit.
+      sortMode: next.active?.gameId === 'capsa' ? 'rank' : 'suit',
     });
   },
 

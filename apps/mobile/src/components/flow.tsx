@@ -67,7 +67,8 @@ export function Handoff({ player }: { player: PlayerId }) {
   const reveal = useBatu((s) => s.reveal);
   return (
     <Public controls>
-      <H1>{t('handoff.pass', { name: names[player] })}</H1>
+      <H1>{t('handoff.turn', { name: names[player] })}</H1>
+      <Muted>{t('handoff.pass', { name: names[player] })}</Muted>
       <Muted>{t('handoff.lookAway')}</Muted>
       <View style={styles.gap} />
       <Button label={t('handoff.reveal')} onPress={reveal} />
