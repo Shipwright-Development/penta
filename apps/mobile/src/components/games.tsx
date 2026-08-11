@@ -152,11 +152,12 @@ function TrickBoard(props: {
         )}
       </View>
       {props.extras}
+      <View style={styles.spacer} />
       <View style={styles.handTop}>
         <Text style={styles.handHint}>{t('trick.hint')}</Text>
         <SortToggle />
       </View>
-      <ScrollView horizontal contentContainerStyle={styles.hand}>
+      <ScrollView horizontal style={styles.handScroll} contentContainerStyle={styles.hand}>
         {sorted.map((card, i) => {
           const legal = isLegal(card);
           return (
@@ -256,7 +257,24 @@ function BidEntry({ player }: { player: PlayerId }) {
       <Text style={styles.muted}>
         {names[player]} · {t('bid.hint')}
       </Text>
-      <ScrollView horizontal contentContainerStyle={styles.hand}>
+      <View style={styles.bidCenter}>
+        <Text style={styles.bidBig}>{summary}</Text>
+        {bothFace && (
+          <View style={styles.shoutRow}>
+            <Text style={styles.muted}>{t('bid.shoutLabel')}</Text>
+            {SHOUTS.map((n) => (
+              <Pressable
+                key={n}
+                onPress={() => setShout(n)}
+                style={[styles.shoutPill, shout === n && styles.shoutActive]}
+              >
+                <Text style={[styles.shoutText, shout === n && styles.shoutActiveText]}>{n}</Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
+      </View>
+      <ScrollView horizontal style={styles.handScroll} contentContainerStyle={styles.hand}>
         {hand.map((card, i) => (
           <Card
             key={i}
@@ -267,21 +285,6 @@ function BidEntry({ player }: { player: PlayerId }) {
           />
         ))}
       </ScrollView>
-      {bothFace && (
-        <View style={styles.shoutRow}>
-          <Text style={styles.muted}>{t('bid.shoutLabel')}</Text>
-          {SHOUTS.map((n) => (
-            <Pressable
-              key={n}
-              onPress={() => setShout(n)}
-              style={[styles.shoutPill, shout === n && styles.shoutActive]}
-            >
-              <Text style={[styles.shoutText, shout === n && styles.shoutActiveText]}>{n}</Text>
-            </Pressable>
-          ))}
-        </View>
-      )}
-      <Text style={styles.bidSummary}>{summary}</Text>
       <View style={styles.undoRow}>
         <Button
           label={t('bid.submit')}
@@ -380,7 +383,8 @@ function HeartsView({ player }: { player: PlayerId }) {
           <SortToggle />
         </View>
         <Text style={styles.muted}>{t('hearts.selectHint')}</Text>
-        <ScrollView horizontal contentContainerStyle={styles.hand}>
+        <View style={styles.spacer} />
+        <ScrollView horizontal style={styles.handScroll} contentContainerStyle={styles.hand}>
           {sortHand(priv.hand, sortMode).map((card, i) => (
             <Card
               key={i}
@@ -490,11 +494,12 @@ function CapsaView({ player }: { player: PlayerId }) {
           .map((p) => `${names[p as PlayerId]} ${t('capsa.left', { n: pub.counts[p] })}`)
           .join('  ')}
       </Text>
+      <View style={styles.spacer} />
       <View style={styles.handTop}>
         <Text style={styles.handHint}>{t('capsa.selectHint')}</Text>
         <SortToggle />
       </View>
-      <ScrollView horizontal contentContainerStyle={styles.hand}>
+      <ScrollView horizontal style={styles.handScroll} contentContainerStyle={styles.hand}>
         {sortHand(priv.hand, sortMode).map((card, i) => (
           <Card
             key={i}
@@ -589,13 +594,14 @@ function SevenView({ player }: { player: PlayerId }) {
           </Text>
         ))}
       </View>
+      <View style={styles.spacer} />
       <View style={styles.handTop}>
         <Text style={styles.handHint}>
           {mustDiscard ? t('seven.mustDiscard') : t('seven.playHint')}
         </Text>
         <SortToggle />
       </View>
-      <ScrollView horizontal contentContainerStyle={styles.hand}>
+      <ScrollView horizontal style={styles.handScroll} contentContainerStyle={styles.hand}>
         {sortHand(priv.hand, sortMode).map((card, i) => {
           const legal = mustDiscard || legalFor(card).length > 0;
           return (
@@ -698,6 +704,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexGrow: 1,
+  },
+  handScroll: { flexGrow: 0 }, // don't stretch vertically — keep the hand at the bottom
+  spacer: { flexGrow: 1 }, // pushes the hand block to the bottom of the screen
+  bidCenter: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', gap: 14 },
+  bidBig: {
+    fontSize: 40,
+    fontWeight: '800',
+    color: theme.accent,
+    minHeight: 48,
+    textAlign: 'center',
   },
   shoutRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 4 },
   shoutPill: {
