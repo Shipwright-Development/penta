@@ -46,6 +46,7 @@ interface BatuStore {
   acceptTally: () => void;
   undo: () => void;
   toggleSelect: (card: Card) => void;
+  selectOne: (card: Card) => void;
   clearSelection: () => void;
   setOverlay: (overlay: BatuStore['overlay']) => void;
   setSortMode: (mode: BatuStore['sortMode']) => void;
@@ -197,6 +198,12 @@ export const useBatu = create<BatuStore>((set, get) => ({
         : [...selection, card],
     });
   },
+  selectOne: (card) =>
+    set((s) => ({
+      selection: s.selection.some((c) => c.suit === card.suit && c.rank === card.rank)
+        ? []
+        : [card],
+    })),
   clearSelection: () => set({ selection: [] }),
 
   setOverlay: (overlay) => set({ overlay }),

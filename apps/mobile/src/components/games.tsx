@@ -126,10 +126,14 @@ function TrickBoard(props: {
   const { names, apply } = useCtx();
   const undo = useBatu((s) => s.undo);
   const sortMode = useBatu((s) => s.sortMode);
+  const selection = useBatu((s) => s.selection);
+  const selectOne = useBatu((s) => s.selectOne);
   const settingsUndo = (useBatu((s) => s.batu) as BatuState).settings.undoEnabled;
   const [confirmUndo, setConfirmUndo] = useState(false);
   const isLegal = (c: CardType) => props.legalCards.some((x) => sameCard(x, c));
+  const isSel = (c: CardType) => selection.some((x) => sameCard(x, c));
   const sorted = sortHand(props.handCards, sortMode);
+  const picked = selection[0];
 
   return (
     <Board>
@@ -154,7 +158,7 @@ function TrickBoard(props: {
       {props.extras}
       <View style={styles.spacer} />
       <View style={styles.handTop}>
-        <Text style={styles.handHint}>{t('trick.hint')}</Text>
+        <Text style={styles.handHint}>{t('turn.pickHint')}</Text>
         <SortToggle />
       </View>
       <ScrollView horizontal style={styles.handScroll} contentContainerStyle={styles.hand}>
@@ -164,15 +168,22 @@ function TrickBoard(props: {
             <Card
               key={i}
               card={card}
+              selected={isSel(card)}
               disabled={!legal}
               testID={legal ? 'legal-card' : undefined}
-              onPress={legal ? () => apply({ type: 'play', card }) : undefined}
+              onPress={legal ? () => selectOne(card) : undefined}
             />
           );
         })}
       </ScrollView>
-      {settingsUndo && (
-        <View style={styles.undoRow}>
+      <View style={styles.actionRow}>
+        <Button
+          label={t('turn.play')}
+          disabled={!picked}
+          testID="play-submit"
+          onPress={() => picked && apply({ type: 'play', card: picked })}
+        />
+        {settingsUndo && (
           <Button
             label={confirmUndo ? t('trick.undoConfirm') : t('trick.undo')}
             variant={confirmUndo ? 'danger' : 'ghost'}
@@ -184,8 +195,8 @@ function TrickBoard(props: {
               } else setConfirmUndo(true);
             }}
           />
-        </View>
-      )}
+        )}
+      </View>
     </Board>
   );
 }
@@ -547,6 +558,8 @@ function SevenView({ player }: { player: PlayerId }) {
   const priv = activePrivateView(batu, player) as { hand: CardType[] };
   const moves = engine.legalMoves(batu, player) as SevenMove[];
   const sortMode = useBatu((s) => s.sortMode);
+  const selection = useBatu((s) => s.selection);
+  const selectOne = useBatu((s) => s.selectOne);
   const [aceCard, setAceCard] = useState<CardType | null>(null);
 
   const plays = moves.filter((m) => m.type === 'play');
@@ -555,6 +568,8 @@ function SevenView({ player }: { player: PlayerId }) {
 
   const legalFor = (card: CardType) =>
     moves.filter((m) => m.type === (mustDiscard ? 'discard' : 'play') && sameCard(m.card, card));
+  const isSel = (c: CardType) => selection.some((x) => sameCard(x, c));
+  const picked = selection[0];
 
   const conv =
     pub.convention === 'none'
@@ -563,20 +578,20 @@ function SevenView({ player }: { player: PlayerId }) {
         ? t('seven.aceUnder')
         : t('seven.aceAbove');
 
-  const onCard = (card: CardType) => {
+  const onSubmit = () => {
+    if (!picked) return;
     if (mustDiscard) {
-      apply({ type: 'discard', card } as SevenMove);
+      apply({ type: 'discard', card: picked } as SevenMove);
       return;
     }
-    const options = legalFor(card).filter(
+    const options = legalFor(picked).filter(
       (m): m is Extract<SevenMove, { type: 'play' }> => m.type === 'play',
     );
-    if (options.length === 0) return;
     if (options.length > 1) {
-      setAceCard(card); // ace with both ends → prompt
+      setAceCard(picked); // ace with both ends → prompt
       return;
     }
-    apply(options[0]);
+    if (options.length === 1) apply(options[0]);
   };
 
   const suits: Suit[] = ['clubs', 'diamonds', 'hearts', 'spades'];
@@ -608,15 +623,16 @@ function SevenView({ player }: { player: PlayerId }) {
             <Card
               key={i}
               card={card}
+              selected={isSel(card)}
               disabled={!legal}
               testID={legal ? 'legal-card' : undefined}
-              onPress={legal ? () => onCard(card) : undefined}
+              onPress={legal ? () => selectOne(card) : undefined}
             />
           );
         })}
       </ScrollView>
 
-      {aceCard && (
+      {aceCard ? (
         <View style={styles.acePrompt}>
           <Text style={styles.muted}>{t('seven.aceWhich')}</Text>
           <View style={styles.aceButtons}>
@@ -635,6 +651,15 @@ function SevenView({ player }: { player: PlayerId }) {
               }}
             />
           </View>
+        </View>
+      ) : (
+        <View style={styles.actionRow}>
+          <Button
+            label={mustDiscard ? t('turn.discard') : t('turn.play')}
+            disabled={!picked}
+            testID="play-submit"
+            onPress={onSubmit}
+          />
         </View>
       )}
     </Board>
@@ -728,6 +753,13 @@ const styles = StyleSheet.create({
   shoutActiveText: { color: theme.accentInk },
   bidSummary: { color: theme.accent, fontSize: 16, fontWeight: '700', minHeight: 22, marginTop: 6 },
   undoRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 4 },
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 6,
+  },
   bidList: { gap: 8, paddingVertical: 12 },
   bidOption: {
     backgroundColor: theme.panel,

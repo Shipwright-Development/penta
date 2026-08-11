@@ -50,6 +50,9 @@ const STRINGS = {
 
   'turn.turn': { en: '{name} to play', id: 'Giliran {name}' },
   'turn.done': { en: 'Confirm', id: 'Konfirmasi' },
+  'turn.play': { en: 'Play card', id: 'Mainkan kartu' },
+  'turn.pickHint': { en: 'Tap a card, then play it', id: 'Ketuk kartu, lalu mainkan' },
+  'turn.discard': { en: 'Discard card', id: 'Buang kartu' },
 
   'bid.title': { en: 'Your secret bid', id: 'Tawaran rahasiamu' },
   'bid.hint': { en: 'Tap 1 or 2 cards to bid', id: 'Ketuk 1 atau 2 kartu untuk menawar' },
