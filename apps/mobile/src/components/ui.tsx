@@ -42,7 +42,7 @@ export function Header({ showControls = true }: { showControls?: boolean }) {
   );
 }
 
-/** A centered public screen (dark green felt). */
+/** A centered public screen (dark green felt), sharing the board's outer margin. */
 export function Public({ children, controls }: { children: ReactNode; controls?: boolean }) {
   return (
     <View style={styles.publicRoot}>
@@ -69,13 +69,8 @@ export function Muted({ children }: { children: ReactNode }) {
   return <Text style={styles.muted}>{children}</Text>;
 }
 
-/** A centred content card — the consistent container for interstitial screens. */
-export function Panel({ children }: { children: ReactNode }) {
-  return <View style={styles.panel}>{children}</View>;
-}
-
 const styles = StyleSheet.create({
-  publicRoot: { flex: 1, backgroundColor: theme.felt },
+  publicRoot: { flex: 1, backgroundColor: theme.felt, paddingHorizontal: 16, paddingBottom: 16 },
   publicCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, padding: 24 },
   boardRoot: { flex: 1, backgroundColor: theme.felt, paddingHorizontal: 16, paddingBottom: 16 },
   header: {
@@ -88,13 +83,4 @@ const styles = StyleSheet.create({
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   h1: { fontSize: 30, fontWeight: '800', color: '#fff', textAlign: 'center' },
   muted: { fontSize: 15, color: '#d7ebe0', textAlign: 'center' },
-  panel: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 16,
-    paddingVertical: 28,
-    paddingHorizontal: 32,
-    gap: 14,
-    alignItems: 'center',
-    maxWidth: 560,
-  },
 });
