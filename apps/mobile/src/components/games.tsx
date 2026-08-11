@@ -601,6 +601,10 @@ function CapsaView({ player }: { player: PlayerId }) {
   const selection = useBatu((s) => s.selection);
   const toggle = useBatu((s) => s.toggleSelect);
   const clearSel = useBatu((s) => s.clearSelection);
+  const setSelection = useBatu((s) => s.setSelection);
+  const groupSelection = useBatu((s) => s.groupSelection);
+  const ungroupAt = useBatu((s) => s.ungroupAt);
+  const capsaGroups = useBatu((s) => s.capsaGroups);
   const sortMode = useBatu((s) => s.sortMode);
 
   const moves = engine.legalMoves(batu, player) as CapsaMove[];
@@ -608,6 +612,16 @@ function CapsaView({ player }: { player: PlayerId }) {
   const playSets = moves.flatMap((m) => (m.type === 'play' ? [m.cards] : []));
   const selectionLegal = playSets.some((set) => sameSet(set, selection));
   const selected = (c: CardType) => selection.some((x) => sameCard(x, c));
+
+  // Groups the player set aside, filtered to cards still in hand (keep raw index).
+  const handHas = (c: CardType) => priv.hand.some((h) => sameCard(h, c));
+  const inGroup = (c: CardType) =>
+    (capsaGroups[player] ?? []).some((g) => g.some((x) => sameCard(x, c)));
+  const groups = (capsaGroups[player] ?? [])
+    .map((g, rawIndex) => ({ rawIndex, cards: g.filter(handHas) }))
+    .filter((x) => x.cards.length > 0);
+  const ungrouped = priv.hand.filter((c) => !inGroup(c));
+  const canGroup = selection.length > 0 && selection.every((c) => !inGroup(c));
 
   return (
     <Board>
@@ -630,12 +644,37 @@ function CapsaView({ player }: { player: PlayerId }) {
         )}
       </View>
       <View style={styles.spacer} />
+      {groups.length > 0 && (
+        <View style={styles.groupsWrap}>
+          <Text style={styles.handHint}>{t('capsa.groupsLabel')}</Text>
+          <View style={styles.groupsRow}>
+            {groups.map(({ rawIndex, cards }) => {
+              const isSel = sameSet(cards, selection);
+              return (
+                <View key={rawIndex} style={[styles.groupBox, isSel && styles.groupBoxSel]}>
+                  <Pressable
+                    style={styles.groupCards}
+                    onPress={() => (isSel ? clearSel() : setSelection(cards))}
+                  >
+                    {cards.map((c, ci) => (
+                      <Card key={ci} card={c} size="sm" />
+                    ))}
+                  </Pressable>
+                  <Pressable onPress={() => ungroupAt(player, rawIndex)} style={styles.ungroupBtn}>
+                    <Text style={styles.ungroupX}>×</Text>
+                  </Pressable>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      )}
       <View style={styles.handTop}>
         <Text style={styles.handHint}>{t('capsa.selectHint')}</Text>
         <SortToggle />
       </View>
       <ScrollView horizontal style={styles.handScroll} contentContainerStyle={styles.hand}>
-        {sortHand(priv.hand, sortMode, true).map((card, i) => (
+        {sortHand(ungrouped, sortMode, true).map((card, i) => (
           <Card
             key={i}
             card={card}
@@ -650,6 +689,12 @@ function CapsaView({ player }: { player: PlayerId }) {
           label={t('capsa.play')}
           disabled={!selectionLegal}
           onPress={() => apply({ type: 'play', cards: selection } as CapsaMove)}
+        />
+        <Button
+          label={t('capsa.group')}
+          variant="ghost"
+          disabled={!canGroup}
+          onPress={() => groupSelection(player)}
         />
         {selection.length > 0 && <Button label="×" variant="ghost" small onPress={clearSel} />}
         {canPass && (
@@ -964,7 +1009,9 @@ const styles = StyleSheet.create({
   hand: {
     flexDirection: 'row',
     gap: 8,
-    paddingVertical: 8,
+    // Extra top room so a selected/hovered card (lifted up) isn't clipped.
+    paddingTop: 30,
+    paddingBottom: 8,
     alignItems: 'center',
     justifyContent: 'center',
     flexGrow: 1,
@@ -1056,6 +1103,21 @@ const styles = StyleSheet.create({
   },
   miniBackOverlap: { marginTop: -7 },
   capsaButtons: { flexDirection: 'row', gap: 10, alignItems: 'center', marginTop: 6 },
+  groupsWrap: { alignItems: 'center', gap: 4, paddingBottom: 6 },
+  groupsRow: { flexDirection: 'row', gap: 12, justifyContent: 'center', flexWrap: 'wrap' },
+  groupBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 8,
+    padding: 6,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  groupBoxSel: { borderColor: theme.accent },
+  groupCards: { flexDirection: 'row', gap: 4 },
+  ungroupBtn: { marginLeft: 4, paddingHorizontal: 4 },
+  ungroupX: { color: '#e6f2ea', fontSize: 18, fontWeight: '800' },
   sevenBoard: {
     flexDirection: 'row',
     justifyContent: 'center',

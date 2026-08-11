@@ -113,6 +113,8 @@ const STRINGS = {
     id: 'Ketuk kartu untuk membentuk permainan',
   },
   'capsa.play': { en: 'Play selected', id: 'Mainkan pilihan' },
+  'capsa.group': { en: 'Group', id: 'Kelompokkan' },
+  'capsa.groupsLabel': { en: 'Your groups', id: 'Kelompokmu' },
   'capsa.pass': { en: 'Pass', id: 'Lewat' },
   'capsa.left': { en: '{n} left', id: 'sisa {n}' },
   'capsa.illegal': { en: 'Not a legal play', id: 'Bukan permainan sah' },

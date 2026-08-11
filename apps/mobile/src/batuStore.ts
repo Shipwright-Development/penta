@@ -56,6 +56,7 @@ interface BatuStore {
   overlay: 'none' | 'sheet' | 'standings' | 'menu' | 'history'; // public overlay on top of play
   sortMode: 'suit' | 'rank'; // how hands are sorted for display
   history: MoveLog[]; // recent moves, newest last
+  capsaGroups: Record<PlayerId, Card[][]>; // Capsa: cards a player has set aside as a combo
 
   newBatu: (names: string[], settings: BatuSettings) => void;
   resume: () => boolean;
@@ -70,7 +71,10 @@ interface BatuStore {
   undo: () => void;
   toggleSelect: (card: Card) => void;
   selectOne: (card: Card) => void;
+  setSelection: (cards: Card[]) => void;
   clearSelection: () => void;
+  groupSelection: (player: PlayerId) => void;
+  ungroupAt: (player: PlayerId, index: number) => void;
   finishSevenDiscards: () => void;
   setOverlay: (overlay: BatuStore['overlay']) => void;
   setSortMode: (mode: BatuStore['sortMode']) => void;
@@ -115,6 +119,7 @@ export const useBatu = create<BatuStore>((set, get) => ({
   overlay: 'none',
   sortMode: 'suit',
   history: [],
+  capsaGroups: { 0: [], 1: [], 2: [], 3: [] },
 
   newBatu: (names, settings) => {
     const batu = engine.create(names as [string, string, string, string], settings);
@@ -131,6 +136,7 @@ export const useBatu = create<BatuStore>((set, get) => ({
       selection: [],
       overlay: 'none',
       history: [],
+      capsaGroups: { 0: [], 1: [], 2: [], 3: [] },
     });
   },
 
@@ -149,6 +155,7 @@ export const useBatu = create<BatuStore>((set, get) => ({
       selection: [],
       overlay: 'none',
       history: [],
+      capsaGroups: { 0: [], 1: [], 2: [], 3: [] },
     });
     return true;
   },
@@ -165,6 +172,7 @@ export const useBatu = create<BatuStore>((set, get) => ({
       trumpBidsSeen: false,
       selection: [],
       lastTrick: null,
+      capsaGroups: { 0: [], 1: [], 2: [], 3: [] },
     });
   },
 
@@ -237,7 +245,24 @@ export const useBatu = create<BatuStore>((set, get) => ({
         ? []
         : [card],
     })),
+  setSelection: (cards) => set({ selection: cards }),
   clearSelection: () => set({ selection: [] }),
+
+  groupSelection: (player) =>
+    set((s) => {
+      if (s.selection.length === 0) return {};
+      const groups = s.capsaGroups[player] ?? [];
+      return {
+        capsaGroups: { ...s.capsaGroups, [player]: [...groups, s.selection] },
+        selection: [],
+      };
+    }),
+  ungroupAt: (player, index) =>
+    set((s) => {
+      const groups = [...(s.capsaGroups[player] ?? [])];
+      groups.splice(index, 1);
+      return { capsaGroups: { ...s.capsaGroups, [player]: groups } };
+    }),
 
   // Seven only: once nobody can play, discard every remaining card and finish.
   // Discards only sum for scoring, so which card each seat sheds and in what
