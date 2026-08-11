@@ -24,14 +24,14 @@ import { engine, activePublicView, activePrivateView } from '../engine';
 import { useBatu } from '../batuStore';
 import { Board } from './ui';
 import { Button } from './Button';
-import { Card } from './Card';
+import { Card, CardBack } from './Card';
 import { SortToggle } from './SortToggle';
 
 // ---- view-shape types (module publicView / privateView outputs) -----------
 
 interface TrickPub {
   leader: PlayerId;
-  plays: { player: PlayerId; card: CardType }[];
+  plays: { player: PlayerId; card: CardType; faceDown?: boolean }[];
 }
 interface TrumpPub {
   phase: 'bidding' | 'adjustment' | 'playing' | 'done';
@@ -147,7 +147,7 @@ function TrickBoard(props: {
           props.currentTrick.plays.map((p, i) => (
             <View key={i} style={styles.slot}>
               <Text style={styles.slotName}>{names[p.player]}</Text>
-              <Card card={p.card} />
+              {p.faceDown ? <CardBack /> : <Card card={p.card} />}
             </View>
           ))
         ) : (
@@ -519,7 +519,7 @@ function RumpunView({ player }: { player: PlayerId }) {
           pub.currentTrick.plays.map((pl, i) => (
             <View key={i} style={styles.slot}>
               <Text style={styles.slotName}>{names[pl.player]}</Text>
-              <Card card={pl.card} />
+              {pl.faceDown ? <CardBack /> : <Card card={pl.card} />}
             </View>
           ))
         ) : (

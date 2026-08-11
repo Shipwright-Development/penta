@@ -91,7 +91,8 @@ function playCard(state: RumpunState, player: PlayerId, card: Card): RumpunState
   const piles = clonePiles(state.piles);
   let pendingReveals = state.pendingReveals;
 
-  if (hands[player].some((c) => sameCard(c, card))) {
+  const fromHand = hands[player].some((c) => sameCard(c, card));
+  if (fromHand) {
     hands[player] = removeCard(hands[player], card);
   } else {
     const pi = piles[player].findIndex((pile) => pile.up && sameCard(pile.up, card));
@@ -100,8 +101,14 @@ function playCard(state: RumpunState, player: PlayerId, card: Card): RumpunState
     pendingReveals = [...pendingReveals, { player, pileIndex: pi }];
   }
 
-  const trumpBroken = state.trumpBroken || card.suit === state.trumpSuit;
-  const updated: TrickState = { leader: trick.leader, plays: [...trick.plays, { player, card }] };
+  const isTrump = card.suit === state.trumpSuit;
+  const trumpBroken = state.trumpBroken || isTrump;
+  // Trump from hand is hidden; trump from a face-up pile top is already known.
+  const faceDown = isTrump && fromHand;
+  const updated: TrickState = {
+    leader: trick.leader,
+    plays: [...trick.plays, { player, card, faceDown }],
+  };
 
   if (!isTrickComplete(updated)) {
     return { ...state, hands, piles, pendingReveals, currentTrick: updated, trumpBroken };

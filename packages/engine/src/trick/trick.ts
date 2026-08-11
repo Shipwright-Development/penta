@@ -11,6 +11,12 @@ import { STANDARD_CARD_RANK } from '../card/ordering';
 export interface PlayedCard {
   player: PlayerId;
   card: Card;
+  /**
+   * True when this card is laid face down for the other players (a trump
+   * played from hand, in Trump and Rumpun). A display concern only — it never
+   * affects trick resolution. Revealed once the trick is complete.
+   */
+  faceDown?: boolean;
 }
 
 export interface TrickState {

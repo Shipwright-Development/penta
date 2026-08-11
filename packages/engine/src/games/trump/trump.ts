@@ -96,9 +96,9 @@ function playCard(state: TrumpState, player: PlayerId, card: Card): TrumpState {
   const hands = cloneHands(state.hands);
   hands[player] = removeCard(hands[player], card);
 
-  const plays = [...trick.plays, { player, card }];
-  const trumpBroken =
-    state.trumpBroken || (state.trumpSuit !== null && card.suit === state.trumpSuit);
+  const isTrump = state.trumpSuit !== null && card.suit === state.trumpSuit;
+  const plays = [...trick.plays, { player, card, faceDown: isTrump }];
+  const trumpBroken = state.trumpBroken || isTrump;
   const updated: TrickState = { leader: trick.leader, plays };
 
   if (!isTrickComplete(updated)) {

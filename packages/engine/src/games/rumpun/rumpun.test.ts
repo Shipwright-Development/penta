@@ -74,6 +74,31 @@ describe('reveal under a played pile top', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Trump played face down — but only from the hand
+// ---------------------------------------------------------------------------
+
+describe('face-down trump', () => {
+  const state = (): RumpunState => ({
+    hands: { 0: [c('spades', 5)], 1: [], 2: [], 3: [] },
+    piles: { 0: [{ down: [], up: c('spades', 8) }], 1: [], 2: [], 3: [] },
+    trumpSuit: 'spades',
+    currentTrick: { leader: 0, plays: [] },
+    trumpBroken: true, // so trump can be led
+    trickNumber: 0,
+    taken: { 0: [], 1: [], 2: [], 3: [] },
+    pendingReveals: [],
+  });
+
+  it('trump from hand is face down; trump from a pile top is not', () => {
+    const fromHand = mod.applyMove(state(), 0, { type: 'play', card: c('spades', 5) });
+    expect(fromHand.currentTrick?.plays[0].faceDown).toBe(true);
+
+    const fromPile = mod.applyMove(state(), 0, { type: 'play', card: c('spades', 8) });
+    expect(fromPile.currentTrick?.plays[0].faceDown).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Scoring uses value, not rank
 // ---------------------------------------------------------------------------
 

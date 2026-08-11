@@ -7,7 +7,7 @@ import { cardBidValue, bidValue, bidSuit, highestBidder, legalBids, isValidBid }
 import type { Bid } from './bid';
 import { trumpScores } from './scoring';
 import { createTrumpModule, trumpDealValid } from './trump';
-import type { TrumpMove } from './trump';
+import type { TrumpMove, TrumpState } from './trump';
 
 const c = (suit: Card['suit'], rank: Card['rank']): Card => ({ suit, rank });
 const ps = (f: number, a: number, b: number, d: number): PlayerScores =>
@@ -210,6 +210,51 @@ describe('trumpDealValid', () => {
 // ---------------------------------------------------------------------------
 // Full round played out headless
 // ---------------------------------------------------------------------------
+
+describe('trump played face down', () => {
+  const playingState = (trumpSuit: 'spades' | null, hand: Card[]): TrumpState => ({
+    phase: 'playing',
+    roundIndex: 0,
+    dealer: 0,
+    hands: { 0: hand, 1: [], 2: [], 3: [] } as Record<PlayerId, Card[]>,
+    bids: {},
+    highestBidder: 0,
+    trumpSuit,
+    originalBids: ps(0, 0, 0, 0),
+    wasZeroBid: flags(false, false, false, false),
+    finalBids: ps(0, 0, 0, 0),
+    adjustment: 0,
+    needsAdjustment: false,
+    currentTrick: { leader: 0, plays: [] },
+    trumpBroken: false,
+    tricksWon: ps(0, 0, 0, 0),
+    tricksPlayed: 0,
+  });
+
+  it('a trump play is laid face down; a non-trump play is not', () => {
+    const mod = createTrumpModule();
+    const trumpPlay = mod.applyMove(playingState('spades', [c('spades', 5)]), 0, {
+      type: 'play',
+      card: c('spades', 5),
+    });
+    expect(trumpPlay.currentTrick?.plays[0].faceDown).toBe(true);
+
+    const plain = mod.applyMove(playingState('spades', [c('hearts', 5)]), 0, {
+      type: 'play',
+      card: c('hearts', 5),
+    });
+    expect(plain.currentTrick?.plays[0].faceDown).toBe(false);
+  });
+
+  it('no-trump: nothing is face down', () => {
+    const mod = createTrumpModule();
+    const after = mod.applyMove(playingState(null, [c('spades', 5)]), 0, {
+      type: 'play',
+      card: c('spades', 5),
+    });
+    expect(after.currentTrick?.plays[0].faceDown).toBe(false);
+  });
+});
 
 describe('createTrumpModule — headless round', () => {
   it('bids, resolves, plays 13 tricks, and reports a valid result', () => {
