@@ -3,6 +3,8 @@ import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import {
   bidValue,
   bidSuit,
+  isNumberCard,
+  isFaceCard,
   type PlayerId,
   type Suit,
   type Rank,
@@ -16,12 +18,13 @@ import {
 } from '@penta/engine';
 import { useT } from '../i18n';
 import { theme } from '../theme';
-import { suitGlyph, cardText } from '../format';
+import { suitGlyph, cardText, sortHand } from '../format';
 import { engine, activePublicView, activePrivateView } from '../engine';
 import { useBatu } from '../batuStore';
 import { Board } from './ui';
 import { Button } from './Button';
 import { Card } from './Card';
+import { SortToggle } from './SortToggle';
 
 // ---- view-shape types (module publicView / privateView outputs) -----------
 
@@ -122,9 +125,11 @@ function TrickBoard(props: {
   const t = useT();
   const { names, apply } = useCtx();
   const undo = useBatu((s) => s.undo);
+  const sortMode = useBatu((s) => s.sortMode);
   const settingsUndo = (useBatu((s) => s.batu) as BatuState).settings.undoEnabled;
   const [confirmUndo, setConfirmUndo] = useState(false);
   const isLegal = (c: CardType) => props.legalCards.some((x) => sameCard(x, c));
+  const sorted = sortHand(props.handCards, sortMode);
 
   return (
     <Board>
@@ -147,9 +152,12 @@ function TrickBoard(props: {
         )}
       </View>
       {props.extras}
-      <Text style={styles.handHint}>{t('trick.hint')}</Text>
+      <View style={styles.handTop}>
+        <Text style={styles.handHint}>{t('trick.hint')}</Text>
+        <SortToggle />
+      </View>
       <ScrollView horizontal contentContainerStyle={styles.hand}>
-        {props.handCards.map((card, i) => {
+        {sorted.map((card, i) => {
           const legal = isLegal(card);
           return (
             <Card
@@ -185,14 +193,105 @@ function TrickBoard(props: {
 // Trump
 // ---------------------------------------------------------------------------
 
-function bidLabel(bid: Bid, t: ReturnType<typeof useT>): string {
-  const cards = bid.kind === 'single' ? [bid.card] : bid.cards;
-  const face = cards.map(cardText).join(' ');
-  const suit = bidSuit(bid);
-  const trumpText = suit === 'NT' ? t('bid.nt') : suitGlyph(suit);
-  const amount =
-    bid.kind === 'faces' ? t('bid.shout', { n: bid.shout }) : t('bid.value', { n: bidValue(bid) });
-  return `${face} · ${amount} · ${trumpText}`;
+function bidMatches(a: Bid, b: Bid): boolean {
+  if (a.kind === 'single' && b.kind === 'single') return sameCard(a.card, b.card);
+  if (a.kind === 'numbers' && b.kind === 'numbers') return sameSet(a.cards, b.cards);
+  if (a.kind === 'faces' && b.kind === 'faces')
+    return sameSet(a.cards, b.cards) && a.shout === b.shout;
+  return false;
+}
+
+const SHOUTS = [7, 8, 9, 10, 11, 12, 13];
+
+/** Card-based bid entry: tap 1–2 cards, pick a shout for a face pair, submit. */
+function BidEntry({ player }: { player: PlayerId }) {
+  const t = useT();
+  const { batu, names, apply } = useCtx();
+  const priv = activePrivateView(batu, player) as { hand: CardType[] };
+  const moves = engine.legalMoves(batu, player) as TrumpMove[];
+  const selection = useBatu((s) => s.selection);
+  const toggle = useBatu((s) => s.toggleSelect);
+  const sortMode = useBatu((s) => s.sortMode);
+  const [shout, setShout] = useState(7);
+
+  const hand = sortHand(priv.hand, sortMode);
+  const selected = (c: CardType) => selection.some((x) => sameCard(x, c));
+  const bothNumber = selection.length === 2 && selection.every(isNumberCard);
+  const bothFace = selection.length === 2 && selection.every(isFaceCard);
+
+  let candidate: Bid | null = null;
+  if (selection.length === 1) candidate = { kind: 'single', card: selection[0] };
+  else if (bothNumber) candidate = { kind: 'numbers', cards: [selection[0], selection[1]] };
+  else if (bothFace) candidate = { kind: 'faces', cards: [selection[0], selection[1]], shout };
+
+  const matched =
+    candidate &&
+    moves.find(
+      (m): m is Extract<TrumpMove, { type: 'bid' }> =>
+        m.type === 'bid' && candidate !== null && bidMatches(m.bid, candidate),
+    );
+  const mixed = selection.length === 2 && !bothNumber && !bothFace;
+
+  const onTap = (card: CardType) => {
+    if (selected(card) || selection.length < 2) toggle(card);
+  };
+
+  let summary = ' ';
+  if (candidate && matched) {
+    const bs = bidSuit(candidate);
+    summary = t('bid.willBe', {
+      n: bidValue(candidate),
+      trump: bs === 'NT' ? t('bid.nt') : suitGlyph(bs),
+    });
+  } else if (mixed) {
+    summary = t('bid.mixed');
+  }
+
+  return (
+    <Board>
+      <View style={styles.infoRow}>
+        <Text style={styles.trump}>{t('bid.title')}</Text>
+        <SortToggle />
+      </View>
+      <Text style={styles.muted}>
+        {names[player]} · {t('bid.hint')}
+      </Text>
+      <ScrollView horizontal contentContainerStyle={styles.hand}>
+        {hand.map((card, i) => (
+          <Card
+            key={i}
+            card={card}
+            selected={selected(card)}
+            testID="hand-card"
+            onPress={() => onTap(card)}
+          />
+        ))}
+      </ScrollView>
+      {bothFace && (
+        <View style={styles.shoutRow}>
+          <Text style={styles.muted}>{t('bid.shoutLabel')}</Text>
+          {SHOUTS.map((n) => (
+            <Pressable
+              key={n}
+              onPress={() => setShout(n)}
+              style={[styles.shoutPill, shout === n && styles.shoutActive]}
+            >
+              <Text style={[styles.shoutText, shout === n && styles.shoutActiveText]}>{n}</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+      <Text style={styles.bidSummary}>{summary}</Text>
+      <View style={styles.undoRow}>
+        <Button
+          label={t('bid.submit')}
+          disabled={!matched}
+          testID="bid-submit"
+          onPress={() => matched && apply(matched)}
+        />
+      </View>
+    </Board>
+  );
 }
 
 function TrumpView({ player }: { player: PlayerId }) {
@@ -201,29 +300,7 @@ function TrumpView({ player }: { player: PlayerId }) {
   const pub = activePublicView(batu) as TrumpPub;
   const moves = engine.legalMoves(batu, player) as TrumpMove[];
 
-  if (pub.phase === 'bidding') {
-    const bids = moves.flatMap((m) => (m.type === 'bid' ? [m.bid] : []));
-    return (
-      <Board>
-        <Text style={styles.h1}>{t('bid.title')}</Text>
-        <Text style={styles.muted}>
-          {names[player]} · {t('bid.hint')}
-        </Text>
-        <ScrollView contentContainerStyle={styles.bidList}>
-          {bids.map((bid, i) => (
-            <Pressable
-              key={i}
-              testID="bid-option"
-              style={styles.bidOption}
-              onPress={() => apply({ type: 'bid', bid })}
-            >
-              <Text style={styles.bidText}>{bidLabel(bid, t)}</Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-      </Board>
-    );
-  }
+  if (pub.phase === 'bidding') return <BidEntry player={player} />;
 
   if (pub.phase === 'adjustment') {
     const amounts = moves.flatMap((m) => (m.type === 'adjust' ? [m.amount] : []));
@@ -285,6 +362,7 @@ function HeartsView({ player }: { player: PlayerId }) {
   const pub = activePublicView(batu) as HeartsPub;
   const selection = useBatu((s) => s.selection);
   const toggle = useBatu((s) => s.toggleSelect);
+  const sortMode = useBatu((s) => s.sortMode);
   const priv = activePrivateView(batu, player) as { hand: CardType[] };
 
   if (pub.phase === 'passing') {
@@ -297,10 +375,13 @@ function HeartsView({ player }: { player: PlayerId }) {
     const selected = (c: CardType) => selection.some((x) => sameCard(x, c));
     return (
       <Board>
-        <Text style={styles.h1}>{t('hearts.pass', { dir })}</Text>
+        <View style={styles.infoRow}>
+          <Text style={styles.h1}>{t('hearts.pass', { dir })}</Text>
+          <SortToggle />
+        </View>
         <Text style={styles.muted}>{t('hearts.selectHint')}</Text>
         <ScrollView horizontal contentContainerStyle={styles.hand}>
-          {priv.hand.map((card, i) => (
+          {sortHand(priv.hand, sortMode).map((card, i) => (
             <Card
               key={i}
               card={card}
@@ -386,6 +467,7 @@ function CapsaView({ player }: { player: PlayerId }) {
   const selection = useBatu((s) => s.selection);
   const toggle = useBatu((s) => s.toggleSelect);
   const clearSel = useBatu((s) => s.clearSelection);
+  const sortMode = useBatu((s) => s.sortMode);
 
   const moves = engine.legalMoves(batu, player) as CapsaMove[];
   const canPass = moves.some((m) => m.type === 'pass');
@@ -408,9 +490,12 @@ function CapsaView({ player }: { player: PlayerId }) {
           .map((p) => `${names[p as PlayerId]} ${t('capsa.left', { n: pub.counts[p] })}`)
           .join('  ')}
       </Text>
-      <Text style={styles.handHint}>{t('capsa.selectHint')}</Text>
+      <View style={styles.handTop}>
+        <Text style={styles.handHint}>{t('capsa.selectHint')}</Text>
+        <SortToggle />
+      </View>
       <ScrollView horizontal contentContainerStyle={styles.hand}>
-        {priv.hand.map((card, i) => (
+        {sortHand(priv.hand, sortMode).map((card, i) => (
           <Card
             key={i}
             card={card}
@@ -456,6 +541,7 @@ function SevenView({ player }: { player: PlayerId }) {
   const pub = activePublicView(batu) as SevenPub;
   const priv = activePrivateView(batu, player) as { hand: CardType[] };
   const moves = engine.legalMoves(batu, player) as SevenMove[];
+  const sortMode = useBatu((s) => s.sortMode);
   const [aceCard, setAceCard] = useState<CardType | null>(null);
 
   const plays = moves.filter((m) => m.type === 'play');
@@ -503,11 +589,14 @@ function SevenView({ player }: { player: PlayerId }) {
           </Text>
         ))}
       </View>
-      <Text style={styles.handHint}>
-        {mustDiscard ? t('seven.mustDiscard') : t('seven.playHint')}
-      </Text>
+      <View style={styles.handTop}>
+        <Text style={styles.handHint}>
+          {mustDiscard ? t('seven.mustDiscard') : t('seven.playHint')}
+        </Text>
+        <SortToggle />
+      </View>
       <ScrollView horizontal contentContainerStyle={styles.hand}>
-        {priv.hand.map((card, i) => {
+        {sortHand(priv.hand, sortMode).map((card, i) => {
           const legal = mustDiscard || legalFor(card).length > 0;
           return (
             <Card
@@ -596,7 +685,25 @@ const styles = StyleSheet.create({
   slotName: { color: '#e6f2ea', fontSize: 13 },
   scoreStrip: { color: '#fff', fontSize: 13, paddingVertical: 4 },
   handHint: { color: '#e6f2ea', fontSize: 14, marginTop: 4 },
+  handTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
   hand: { flexDirection: 'row', gap: 8, paddingVertical: 8, alignItems: 'flex-end' },
+  shoutRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 4 },
+  shoutPill: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: theme.border,
+  },
+  shoutActive: { backgroundColor: theme.accent, borderColor: theme.accent },
+  shoutText: { color: '#e6f2ea', fontWeight: '700' },
+  shoutActiveText: { color: theme.accentInk },
+  bidSummary: { color: theme.accent, fontSize: 16, fontWeight: '700', minHeight: 22, marginTop: 6 },
   undoRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 4 },
   bidList: { gap: 8, paddingVertical: 12 },
   bidOption: {

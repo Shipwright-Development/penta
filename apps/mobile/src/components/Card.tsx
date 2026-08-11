@@ -15,7 +15,7 @@ interface Props {
 /** A playing card drawn in code (no image assets) — rank + suit glyph. */
 export function Card({ card, onPress, disabled, selected, size = 'md', testID }: Props) {
   const color = isRed(card.suit) ? theme.red : theme.ink;
-  const dim = disabled && onPress !== undefined;
+  const dim = disabled === true; // grey out any card explicitly marked unplayable
 
   const face = (
     <View

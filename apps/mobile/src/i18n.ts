@@ -52,10 +52,21 @@ const STRINGS = {
   'turn.done': { en: 'Confirm', id: 'Konfirmasi' },
 
   'bid.title': { en: 'Your secret bid', id: 'Tawaran rahasiamu' },
-  'bid.hint': { en: 'Tap the bid you want to place', id: 'Ketuk tawaran yang ingin dipasang' },
+  'bid.hint': { en: 'Tap 1 or 2 cards to bid', id: 'Ketuk 1 atau 2 kartu untuk menawar' },
   'bid.value': { en: 'bid {n}', id: 'tawar {n}' },
   'bid.shout': { en: 'shout {n}', id: 'seru {n}' },
+  'bid.shoutLabel': { en: 'Shout', id: 'Seru' },
   'bid.nt': { en: 'No-Trump', id: 'Tanpa Truf' },
+  'bid.willBe': { en: 'Bid {n} · {trump}', id: 'Tawar {n} · {trump}' },
+  'bid.mixed': {
+    en: 'Two number cards or two face cards — not mixed',
+    id: 'Dua angka atau dua wajah — jangan campur',
+  },
+  'bid.submit': { en: 'Submit bid', id: 'Kirim tawaran' },
+
+  'sort.by': { en: 'Sort', id: 'Urut' },
+  'sort.suit': { en: 'Suit', id: 'Suit' },
+  'sort.rank': { en: 'Rank', id: 'Angka' },
 
   'reveal.title': { en: 'Bids revealed', id: 'Tawaran dibuka' },
   'reveal.highest': { en: 'Highest bidder: {name}', id: 'Penawar tertinggi: {name}' },

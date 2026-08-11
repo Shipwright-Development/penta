@@ -30,8 +30,9 @@ interface BatuStore {
   lastTrick: CompletedTrick | null; // public trick result awaiting acknowledgement
   summaryPending: SummaryInfo | null; // round summary awaiting acknowledgement
   tallyPending: GameId | null; // penta tally awaiting acknowledgement (after round 4)
-  selection: Card[]; // multi-card selection (Capsa combo, Hearts pass)
+  selection: Card[]; // multi-card selection (Capsa combo, Hearts pass, Trump bid)
   overlay: 'none' | 'sheet' | 'standings' | 'menu'; // public overlay on top of play
+  sortMode: 'suit' | 'rank'; // how hands are sorted for display
 
   newBatu: (names: string[], settings: BatuSettings) => void;
   resume: () => boolean;
@@ -47,6 +48,7 @@ interface BatuStore {
   toggleSelect: (card: Card) => void;
   clearSelection: () => void;
   setOverlay: (overlay: BatuStore['overlay']) => void;
+  setSortMode: (mode: BatuStore['sortMode']) => void;
   abandon: () => void;
 }
 
@@ -86,6 +88,7 @@ export const useBatu = create<BatuStore>((set, get) => ({
   tallyPending: null,
   selection: [],
   overlay: 'none',
+  sortMode: 'suit',
 
   newBatu: (names, settings) => {
     const batu = engine.create(names as [string, string, string, string], settings);
@@ -197,6 +200,7 @@ export const useBatu = create<BatuStore>((set, get) => ({
   clearSelection: () => set({ selection: [] }),
 
   setOverlay: (overlay) => set({ overlay }),
+  setSortMode: (sortMode) => set({ sortMode }),
   abandon: () => {
     clearSave();
     set({ batu: null, overlay: 'none' });

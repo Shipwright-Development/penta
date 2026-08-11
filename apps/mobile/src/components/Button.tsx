@@ -7,13 +7,15 @@ interface Props {
   disabled?: boolean;
   variant?: 'primary' | 'ghost' | 'danger';
   small?: boolean;
+  testID?: string;
 }
 
-export function Button({ label, onPress, disabled, variant = 'primary', small }: Props) {
+export function Button({ label, onPress, disabled, variant = 'primary', small, testID }: Props) {
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
+      testID={testID}
       accessibilityRole="button"
       style={({ pressed }) => [
         styles.base,
