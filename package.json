@@ -1,0 +1,28 @@
+{
+  "name": "penta",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "test": "npm test --workspaces",
+    "test:engine": "npm -w @penta/engine test",
+    "test:watch": "npm -w @penta/engine run test:watch",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc -p packages/engine",
+    "web": "npm --workspace=apps/mobile run web",
+    "start": "npm --workspace=apps/mobile run start",
+    "demo": "tsx packages/engine/demo/play-batu.ts"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^10.0.0",
+    "prettier": "^3.9.6",
+    "tsx": "^4.23.12",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.66.0"
+  }
+}

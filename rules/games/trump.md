@@ -40,6 +40,7 @@ If all bids total exactly 13, the highest bidder **must** adjust every player's 
 - The highest bidder leads the first trick; the trick winner leads the next.
 - Standard trick-taking: follow suit if able; otherwise play any card (including trump). Highest trump wins; if no trump, highest card of the led suit wins.
 - **Trump breaking:** trump cannot be *led* until it has been played on a trick (broken). The opening lead also cannot be trump. Exception: a player whose playable cards are all trump may lead trump.
+- **Trump is played face down.** A trump card is laid face down; the other players don't see which trump it is until the trick is revealed — once all four cards are down, the whole trick is turned face up and resolved. Non-trump cards are played face up as usual. This hides information during the trick only; it changes no legality or scoring (the led suit is always the first, face-up card, unless the lead itself is trump).
 
 ## Scoring
 

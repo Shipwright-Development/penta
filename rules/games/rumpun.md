@@ -25,6 +25,7 @@ A blind-stacked trick-taking game. **Goal: collect the highest card-value total 
   - **Trump wins normally.** Playing trump when you can't follow suit takes the trick, exactly as in ordinary trick-taking (highest trump wins if several are played).
   - **Any other off-suit card is a dump.** It **cannot win the trick**, but its value still goes to the trick winner's score.
 - **Trump breaking:** trump cannot be led until broken. Exception: no other playable option.
+- **Trump from hand is played face down.** A trump card played from your hand is laid face down and revealed only when the trick completes (all four cards down). A trump played from a face-up **pile top stays face up** — the others already know that card. This hides information during the trick only; it changes no legality or scoring.
 - 13 tricks total; trick winner leads next.
 
 ## Scoring

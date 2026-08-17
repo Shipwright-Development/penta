@@ -1,0 +1,19 @@
+node_modules/
+dist/
+build/
+.expo/
+web-build/
+
+# Read-only byte-identical copies from the vault — never reformat,
+# it would break `handoff.sh --check`.
+rules/
+specs/
+
+# Prose docs stay under human control, not the code formatter.
+*.md
+
+# Expo rewrites this file's `include` on every dev-server start, which
+# fights the formatter. Let Expo own it.
+apps/mobile/tsconfig.json
+
+package-lock.json
